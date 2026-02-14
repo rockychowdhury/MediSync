@@ -4,12 +4,12 @@ Project Assets
 .vscode
 
 # ── Backend environment ──
-Backend/.env
-Backend/venv/
+backend/.env
+backend/venv/
 
 # ── Frontend environment ──
-Frontend/.env.local
-Frontend/node_modules/
+frontend/.env.local
+frontend/node_modules/
 
 # ── Python ──
 __pycache__/

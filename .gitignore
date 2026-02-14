@@ -1,3 +1,34 @@
+# ── Project specific ──
 Project Plan
 Project Assets
-.env
+.vscode
+
+# ── Backend environment ──
+Backend/.env
+Backend/venv/
+
+# ── Frontend environment ──
+Frontend/.env.local
+Frontend/node_modules/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Docker ──
+*.log
+
+# ── IDE ──
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db

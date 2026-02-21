@@ -34,6 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${montserrat.variable} ${inter.variable} antialiased`}
+        suppressHydrationWarning
       >
         {children}
       </body>

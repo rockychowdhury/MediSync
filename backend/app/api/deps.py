@@ -1,15 +1,9 @@
-from typing import Generator
+"""
+Application-wide FastAPI dependencies.
 
-from app.db.session import SessionLocal
+Re-exports the database session dependency from its canonical location.
+"""
 
+from app.db.session import get_db  # noqa: F401
 
-def get_db() -> Generator:
-    """
-    Dependency that provides a database session.
-    Ensures the session is properly closed after each request.
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+__all__ = ["get_db"]

@@ -1,11 +1,11 @@
+/* ── Google Fonts ── */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap");
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
-
-/* ── Google Fonts ── */
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap");
 
 @theme inline {
   /* ── Typography ── */
@@ -165,10 +165,17 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground font-body;
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading font-bold text-deep-navy;
   }
 }
@@ -178,9 +185,11 @@
   .gradient-primary {
     background: linear-gradient(135deg, #1E4A9E, #40A8C4);
   }
+
   .gradient-primary-hover {
     background: linear-gradient(135deg, #163b7e, #3590a8);
   }
+
   .text-gradient-primary {
     background: linear-gradient(135deg, #1E4A9E, #40A8C4);
     -webkit-background-clip: text;

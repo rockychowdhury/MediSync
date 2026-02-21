@@ -33,11 +33,17 @@ class TimeStampMixin:
 
 
 class SoftDeleteMixin:
-    """Provides soft-delete capability with is_deleted flag and deleted_at timestamp."""
+    """
+    Provides soft-delete capability via an is_active flag.
 
-    is_deleted: Mapped[bool] = mapped_column(
+    - is_active = True  → record is active (default)
+    - is_active = False → record is soft-deleted
+    - deleted_at         → timestamp of soft deletion (for audit trail)
+    """
+
+    is_active: Mapped[bool] = mapped_column(
         Boolean,
-        default=False,
+        default=True,
         nullable=False,
         index=True,
     )

@@ -59,16 +59,61 @@ class ResponseMessages:
     REGISTRATION_SUCCESS = "User registered successfully"
     PASSWORD_CHANGED = "Password changed successfully"
     TOKEN_REFRESHED = "Tokens refreshed successfully"
+    PASSWORD_RESET_EMAIL_SENT = "Password reset email sent successfully"
+    PASSWORD_RESET_SUCCESS = "Password reset successfully"
 
     # Profile
     PROFILE_UPDATED = "Profile updated successfully"
     PROFILE_RETRIEVED = "Profile retrieved successfully"
+
+    # Provider Management
+    PROVIDER_CREATED = "Provider profile created successfully"
+    PROVIDER_UPDATED = "Provider profile updated successfully"
+    PROVIDER_DELETED = "Provider profile deleted successfully"
+    PROVIDER_RETRIEVED = "Provider retrieved successfully"
+    PROVIDER_NOT_FOUND = "Provider not found"
+    PROVIDER_AVAILABILITY_UPDATED = "Provider availability updated successfully"
+    PROVIDER_CAPACITY_REACHED = "Provider has reached maximum daily capacity"
+
+    # Service Catalog Management
+    SERVICE_CREATED = "Service created successfully"
+    SERVICE_UPDATED = "Service updated successfully"
+    SERVICE_DELETED = "Service deleted successfully"
+    SERVICE_RETRIEVED = "Service retrieved successfully"
+    SERVICE_NOT_FOUND = "Service not found"
+
+    # Appointment Management
+    APPOINTMENT_BOOKED = "Appointment booked successfully"
+    APPOINTMENT_UPDATED = "Appointment updated successfully"
+    APPOINTMENT_CANCELLED = "Appointment cancelled successfully"
+    APPOINTMENT_RESCHEDULED = "Appointment rescheduled successfully"
+    APPOINTMENT_RETRIEVED = "Appointment retrieved successfully"
+    APPOINTMENT_NOT_FOUND = "Appointment not found"
+    APPOINTMENT_CONFLICT = "Time slot is already booked or provider is unavailable"
+    APPOINTMENT_CHECKED_IN = "Patient checked-in successfully"
+    APPOINTMENT_CHECKED_OUT = "Patient checked-out successfully"
+    APPOINTMENT_NO_SHOW = "Appointment marked as no-show"
+
+    # Waitlist & Queue Management
+    ADDED_TO_WAITLIST = "Successfully added to the waitlist"
+    REMOVED_FROM_WAITLIST = "Successfully removed from the waitlist"
+    WAITLIST_ASSIGNED = "Appointment assigned from waitlist successfully"
+    WAITLIST_RETRIEVED = "Waitlist retrieved successfully"
+
+    # Dashboard & Analytics
+    DASHBOARD_DATA_RETRIEVED = "Dashboard data retrieved successfully"
+    REPORT_GENERATED = "Report generated successfully"
+
+    # Notifications
+    NOTIFICATION_SENT = "Notification sent successfully"
+    NOTIFICATION_PREFERENCES_UPDATED = "Notification preferences updated successfully"
 
     # General
     CREATED_SUCCESS = "Created successfully"
     UPDATED_SUCCESS = "Updated successfully"
     DELETED_SUCCESS = "Deleted successfully"
     RETRIEVED_SUCCESS = "Data retrieved successfully"
+    OPERATION_SUCCESSFUL = "Operation successful"
 
     # Errors
     INVALID_CREDENTIALS = "Invalid email or password"

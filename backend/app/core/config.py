@@ -10,15 +10,15 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Database (Docker PostgreSQL)
-    DATABASE_URL: str = "postgresql://medisync:medisync@db:5432/medisync_db"
+    DATABASE_URL: str
 
     # Security
-    SECRET_KEY: str = "change-me-in-production"
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000"
+    ALLOWED_ORIGINS: str
 
     @property
     def cors_origins(self) -> List[str]:

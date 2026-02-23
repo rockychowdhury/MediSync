@@ -1,18 +1,4 @@
-"""
-CRUD — Data Access Layer
+from app.crud.base import CRUDBase
+from app.crud.crud_user import user
 
-This package contains database operation classes for each model.
-Each module should provide a class inheriting from CRUDBase
-with model-specific queries.
-
-Usage:
-    from app.crud.base import CRUDBase
-    from app.models.user import User
-    from app.schemas.user import UserCreate, UserUpdate
-
-    class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-        # Add custom queries here
-        pass
-
-    user_crud = CRUDUser(User)
-"""
+__all__ = ["CRUDBase", "user"]

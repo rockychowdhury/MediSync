@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.api.v1.router import router as v1_router
 from app.middleware.error_handler import register_exception_handlers
 from app.utils.response import APIResponse
+from app.middleware.auth import JWTAuthenticationMiddleware
 
 
 def create_app() -> FastAPI:
@@ -26,6 +27,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # ── Authentication Middleware ──
+    app.add_middleware(JWTAuthenticationMiddleware)
 
     # ── Exception Handlers ──
     register_exception_handlers(app)

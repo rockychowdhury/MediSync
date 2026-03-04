@@ -4,8 +4,7 @@ Application-wide FastAPI dependencies.
 Provides database session management and user authentication logic.
 """
 
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import Annotated
 
@@ -14,35 +13,39 @@ from app.models.user import User
 
 __all__ = ["get_db", "get_current_user"]
 
-# The URL where clients send username/password to get a token.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
-
 def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    request: Request,
     db: Session = Depends(get_db)
 ) -> User:
     """
-    [STUB] Decodes the JWT token and fetches the current user from the database.
-    Implement JWT decoding and error handling logic here later.
+    Fetches the current user from the database based on the authentication middleware context.
+    The middleware validates the token and sets request.state.user_payload.
     """
-    # TODO: Decode token, validate expiry, extract user ID (e.g. using python-jose)
-    # Then query db to fetch the actual user.
-    # Ex:
-    # try:
-    #     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-    #     user_id: str = payload.get("sub")
-    #     if user_id is None:
-    #         raise AuthException()
-    # except JWTError:
-    #     raise AuthException()
+    payload = getattr(request.state, "user_payload", None)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
-    # user = crud.user.get(db, id=user_id)
-    # if not user:
-    #     raise AuthException()
-    # return user
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
-    # Stub response representing a fallback/unimplemented block
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="get_current_user decoding logic is stubbed out. Please implement."
-    )
+    from app.crud.crud_user import user as user_crud
+    user = user_crud.get(db, id=int(user_id))
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+    # We might want to check if account is disabled depending on User model
+    # (Optional based on business logic)
+    
+    return user

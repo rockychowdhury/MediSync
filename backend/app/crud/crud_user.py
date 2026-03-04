@@ -24,7 +24,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             name=obj_in.name,
             email=obj_in.email,
             role_id=obj_in.role_id,
-            hashed_password=get_password_hash(obj_in.password),
+            password_hash=get_password_hash(obj_in.password),
         )
         db.add(db_obj)
         db.commit()
@@ -47,9 +47,25 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if "password" in update_data:
             hashed_password = get_password_hash(update_data["password"])
             del update_data["password"]
-            update_data["hashed_password"] = hashed_password
+            update_data["password_hash"] = hashed_password
 
         return super().update(db, db_obj=db_obj, obj_in=update_data)
+
+    def create_superuser(self, db: Session, *, obj_in: UserCreate) -> User:
+        """Create a superuser with the admin role."""
+        from app.models.role import Role
+        
+        # Ensure role exists or fetch admin role
+        admin_role = db.query(Role).filter(Role.name == "admin").first()
+        if not admin_role:
+            raise Exception("Admin role not found during superuser creation.")
+            
+        obj_in.role_id = admin_role.id
+        return self.create(db, obj_in=obj_in)
+
+    def assign_role(self, db: Session, *, user: User, role_id: int) -> User:
+        """Update a user's role."""
+        return self.update(db, db_obj=user, obj_in={"role_id": role_id})
 
 
 user = CRUDUser(User)

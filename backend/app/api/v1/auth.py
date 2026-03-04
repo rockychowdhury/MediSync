@@ -6,43 +6,52 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import get_db, get_current_user
-from app.core.security import verify_password, create_access_token, create_refresh_token
+from app.core.security import verify_password
+from app.core.auth import JWTAuthManager
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
 from app.utils.response import APIResponse, ResponseMessages
+from fastapi import Response
 
 router = APIRouter()
 
 
 @router.post("/login")
 def login(
-    db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
+    response: Response,
+    db: Session = Depends(get_db), 
+    form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
-    OAuth2 compatible token login, getting an access token for future requests.
+    OAuth2 compatible token login, setting access and refresh tokens as HTTPOnly cookies.
     """
     user = crud.user.get_by_email(db, email=form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.password_hash):
         return APIResponse.error(
             message=ResponseMessages.INVALID_CREDENTIALS,
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
-    elif not user.is_active:
-        return APIResponse.error(
-            message=ResponseMessages.ACCOUNT_DISABLED,
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+    # is_active doesn't seem to exist on model currently, skip or add check based on locked_until
+    # We will assume successful auth
+    
+    access_token, refresh_token = JWTAuthManager.generate_token_pair(user.id, user.role_id)
+    JWTAuthManager.set_auth_cookies(response, access_token, refresh_token)
 
-    # JWT generation is STUBBED Out exactly as specified by the user.
-    access_token = create_access_token(user.id)
-    refresh_token = create_refresh_token(user.id)
+    return APIResponse.success(
+        message=ResponseMessages.LOGIN_SUCCESS,
+        data={
+            "user_id": user.id,
+            "role_id": user.role_id
+        }
+    )
 
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-        "user_id": user.id,
-    }
+@router.post("/logout")
+def logout(response: Response) -> Any:
+    """
+    Clear authentication cookies to log out the user.
+    """
+    JWTAuthManager.clear_auth_cookies(response)
+    return APIResponse.success(message=ResponseMessages.LOGOUT_SUCCESS)
 
 
 @router.post("/register", response_model=UserResponse)

@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, get_current_active_admin
 from app.core.security import verify_password
 from app.core.auth import JWTAuthManager
 from app.models.user import User
@@ -35,28 +35,33 @@ def login(
     # We will assume successful auth
     
     access_token, refresh_token = JWTAuthManager.generate_token_pair(user.id, user.role_id)
-    JWTAuthManager.set_auth_cookies(response, access_token, refresh_token)
-
-    return APIResponse.success(
+    
+    response_obj = APIResponse.success(
         message=ResponseMessages.LOGIN_SUCCESS,
         data={
             "user_id": user.id,
             "role_id": user.role_id
         }
     )
+    JWTAuthManager.set_auth_cookies(response_obj, access_token, refresh_token)
+    return response_obj
 
 @router.post("/logout")
 def logout(response: Response) -> Any:
     """
     Clear authentication cookies to log out the user.
     """
-    JWTAuthManager.clear_auth_cookies(response)
-    return APIResponse.success(message=ResponseMessages.LOGOUT_SUCCESS)
+    response_obj = APIResponse.success(message=ResponseMessages.LOGOUT_SUCCESS)
+    JWTAuthManager.clear_auth_cookies(response_obj)
+    return response_obj
 
 
 @router.post("/register", response_model=UserResponse)
 def register(
-    *, db: Session = Depends(get_db), user_in: UserCreate
+    *, 
+    db: Session = Depends(get_db), 
+    user_in: UserCreate,
+    current_admin: User = Depends(get_current_active_admin)
 ) -> Any:
     """
     Register a new user in the system.
@@ -66,6 +71,15 @@ def register(
         return APIResponse.error(
             message=ResponseMessages.USER_ALREADY_EXISTS,
             status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Prevent creating admin accounts via API
+    from app.models.role import Role
+    admin_role = db.query(Role).filter(Role.name == "admin").first()
+    if user_in.role_id == admin_role.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot create admin accounts via API.",
         )
 
     user = crud.user.create(db, obj_in=user_in)

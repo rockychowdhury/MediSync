@@ -20,9 +20,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         """Create a user with a securely hashed password."""
+        # Data cleaning
+        email = obj_in.email.lower().strip()
+        name = obj_in.name.strip()
+        
         db_obj = User(
-            name=obj_in.name,
-            email=obj_in.email,
+            name=name,
+            email=email,
             role_id=obj_in.role_id,
             password_hash=get_password_hash(obj_in.password),
         )

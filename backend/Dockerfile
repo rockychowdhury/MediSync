@@ -21,8 +21,11 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy application code
 COPY . .
 
+# Make pre-start.sh executable
+RUN chmod +x pre-start.sh
+
 # Expose port
 EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["./pre-start.sh"]

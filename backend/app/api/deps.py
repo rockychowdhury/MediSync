@@ -11,7 +11,7 @@ from typing import Annotated
 from app.db.session import get_db
 from app.models.user import User
 
-__all__ = ["get_db", "get_current_user"]
+__all__ = ["get_db", "get_current_user", "get_current_active_admin"]
 
 def get_current_user(
     request: Request,
@@ -49,3 +49,18 @@ def get_current_user(
     # (Optional based on business logic)
     
     return user
+
+
+def get_current_active_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    Ensures the current user is an active admin.
+    """
+    # Assuming role name is accessible or we check role_id
+    if current_user.role.name != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges",
+        )
+    return current_user

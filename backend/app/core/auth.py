@@ -20,14 +20,14 @@ class JWTAuthManager:
     COOKIE_SAMESITE = "lax"  # "none" if cross-origin
 
     @classmethod
-    def generate_token_pair(cls, user_id: int, role_id: int) -> Tuple[str, str]:
+    def generate_token_pair(cls, user_id: Any, role_id: int) -> Tuple[str, str]:
         """Generates a new access and refresh token pair."""
         access_token = cls._generate_access_token(user_id, role_id)
         refresh_token = cls._generate_refresh_token(user_id, role_id)
         return access_token, refresh_token
 
     @classmethod
-    def _generate_access_token(cls, user_id: int, role_id: int) -> str:
+    def _generate_access_token(cls, user_id: Any, role_id: int) -> str:
         """Generates a short-lived access token."""
         expire = datetime.now(timezone.utc) + timedelta(minutes=cls.ACCESS_TOKEN_EXPIRE_MINUTES)
         to_encode = {
@@ -40,7 +40,7 @@ class JWTAuthManager:
         return encoded_jwt
 
     @classmethod
-    def _generate_refresh_token(cls, user_id: int, role_id: int) -> str:
+    def _generate_refresh_token(cls, user_id: Any, role_id: int) -> str:
         """Generates a long-lived refresh token."""
         expire = datetime.now(timezone.utc) + timedelta(days=cls.REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode = {

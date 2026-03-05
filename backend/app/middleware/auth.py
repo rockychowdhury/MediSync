@@ -22,7 +22,7 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
                 payload = JWTAuthManager.validate_token(refresh_token, "refresh")
                 if payload:
                     # Valid refresh token -> issue new access & refresh tokens
-                    user_id = int(payload.get("sub"))
+                    user_id = payload.get("sub")
                     role_id = int(payload.get("role"))
                     new_access, new_refresh = JWTAuthManager.generate_token_pair(user_id, role_id)
                     new_tokens = (new_access, new_refresh)

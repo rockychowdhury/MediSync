@@ -21,7 +21,7 @@ def get_current_user(
     Fetches the current user from the database based on the authentication middleware context.
     The middleware validates the token and sets request.state.user_payload.
     """
-    payload = getattr(request.state, "user_payload", None)
+    payload = getattr(request.state, "user_payload", None) #From Middleware
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -38,7 +38,7 @@ def get_current_user(
         )
     
     from app.crud.crud_user import user as user_crud
-    user = user_crud.get(db, id=int(user_id))
+    user = user_crud.get(db, id=user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -57,7 +57,11 @@ def get_current_active_admin(
     """
     Ensures the current user is an active admin.
     """
-    # Assuming role name is accessible or we check role_id
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Inactive user account",
+        )
     if current_user.role.name != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

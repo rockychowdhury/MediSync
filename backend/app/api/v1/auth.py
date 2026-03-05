@@ -79,7 +79,7 @@ def register(
     if user_in.role_id == admin_role.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot create admin accounts via API.",
+            detail="Not a valid role.",
         )
 
     user = crud.user.create(db, obj_in=user_in)

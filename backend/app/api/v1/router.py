@@ -1,13 +1,15 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth
+from app.api.v1 import auth, users, profile
 from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
 
 router.include_router(auth.router, prefix="/auth", tags=["auth"])
+router.include_router(users.router, prefix="/users", tags=["users"])
+router.include_router(profile.router, prefix="/profile", tags=["profile"])
 
-@router.get("/")
+@router.get("/", tags=["v1"])
 def root():
     """API v1 root — confirms the API is reachable."""
     return APIResponse.success(

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
 
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
 
 class APIResponse:
@@ -17,8 +18,8 @@ class APIResponse:
         response_data: Dict[str, Any] = {
             "success": True,
             "message": message,
-            "data": data,
-            "meta": meta or {},
+            "data": jsonable_encoder(data),
+            "meta": jsonable_encoder(meta) or {},
         }
         return JSONResponse(content=response_data, status_code=status_code)
 
@@ -33,7 +34,7 @@ class APIResponse:
         response_data: Dict[str, Any] = {
             "success": False,
             "message": message,
-            "errors": errors,
+            "errors": jsonable_encoder(errors),
             "error_code": error_code,
         }
         return JSONResponse(content=response_data, status_code=status_code)

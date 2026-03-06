@@ -18,6 +18,45 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """Fetch a User by their unique email."""
         return db.query(self.model).filter(self.model.email == email).first()
 
+    def get_active_by_email(self, db: Session, *, email: str) -> User | None:
+        """Fetch an active User by their unique email."""
+        return db.query(self.model).filter(
+            self.model.email == email, 
+            self.model.is_active == True
+        ).first()
+
+    def get_multi_filtered(
+        self, 
+        db: Session, 
+        *, 
+        skip: int = 0, 
+        limit: int = 100,
+        role_id: int | None = None,
+        is_active: bool | None = None,
+        search: str | None = None
+    ) -> tuple[list[User], int]:
+        """Fetch users with pagination and filtering."""
+        query = db.query(self.model)
+        
+        if role_id is not None:
+            query = query.filter(self.model.role_id == role_id)
+        if is_active is not None:
+            query = query.filter(self.model.is_active == is_active)
+        
+        # By default, exclude soft-deleted records unless search is specific
+        if not search:
+            query = query.filter(self.model.deleted_at == None)
+        
+        if search:
+            query = query.filter(
+                (self.model.email.ilike(f"%{search}%")) | 
+                (self.model.name.ilike(f"%{search}%"))
+            )
+            
+        total = query.count()
+        users = query.offset(skip).limit(limit).all()
+        return users, total
+
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         """Create a user with a securely hashed password."""
         # Data cleaning

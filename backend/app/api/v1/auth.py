@@ -26,21 +26,54 @@ def login(
     OAuth2 compatible token login, setting access and refresh tokens as HTTPOnly cookies.
     """
     user = crud.user.get_by_email(db, email=form_data.username)
-    if not user or not verify_password(form_data.password, user.password_hash):
+    if not user:
         return APIResponse.error(
             message=ResponseMessages.INVALID_CREDENTIALS,
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
-    # is_active doesn't seem to exist on model currently, skip or add check based on locked_until
-    # We will assume successful auth
+
+    # Check if account is locked or deactivated
+    from datetime import datetime, timezone, timedelta
+    if not user.is_active:
+        return APIResponse.error(
+            message=ResponseMessages.ACCOUNT_DISABLED,
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
+    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        return APIResponse.error(
+            message=f"Account is locked until {user.locked_until.strftime('%Y-%m-%d %H:%M:%S')} UTC",
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+
+    if not verify_password(form_data.password, user.password_hash):
+        # Update failed attempts
+        user.failed_login_attempts += 1
+        if user.failed_login_attempts >= 5:
+            user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+        db.add(user)
+        db.commit()
+        return APIResponse.error(
+            message=ResponseMessages.INVALID_CREDENTIALS,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    
+    # Successful login logic
+    user.last_login_at = datetime.now(timezone.utc)
+    user.failed_login_attempts = 0
+    user.locked_until = None
+    db.add(user)
+    db.commit()
     
     access_token, refresh_token = JWTAuthManager.generate_token_pair(user.id, user.role_id)
     
+    # We want to include role_name in the response data
     response_obj = APIResponse.success(
         message=ResponseMessages.LOGIN_SUCCESS,
         data={
             "user_id": user.id,
-            "role_id": user.role_id
+            "role_id": user.role_id,
+            "role_name": user.role.name if user.role else None
         }
     )
     JWTAuthManager.set_auth_cookies(response_obj, access_token, refresh_token)
@@ -56,41 +89,19 @@ def logout(response: Response) -> Any:
     return response_obj
 
 
-@router.post("/register", response_model=UserResponse)
-def register(
-    *, 
-    db: Session = Depends(get_db), 
-    user_in: UserCreate,
-    current_admin: User = Depends(get_current_active_admin)
-) -> Any:
-    """
-    Register a new user in the system.
-    """
-    user = crud.user.get_by_email(db, email=user_in.email)
-    if user:
-        return APIResponse.error(
-            message=ResponseMessages.USER_ALREADY_EXISTS,
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # Prevent creating admin accounts via API
-    from app.models.role import Role
-    admin_role = db.query(Role).filter(Role.name == "admin").first()
-    if user_in.role_id == admin_role.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Not a valid role.",
-        )
-
-    user = crud.user.create(db, obj_in=user_in)
+@router.post("/forgot-password")
+def forgot_password(email: str, db: Session = Depends(get_db)) -> Any:
+    """Send password reset link to user's email."""
+    user = crud.user.get_by_email(db, email=email)
+    if not user:
+         # Return success anyway to prevent email enumeration
+         return APIResponse.success(message="Password reset email sent if account exists")
     
-    # Use standard response dict matching UserResponse schema
-    return user
+    # TODO: Implement token generation and email sending
+    return APIResponse.success(message="Password reset email sent")
 
-
-@router.get("/me", response_model=UserResponse)
-def read_current_user(current_user: User = Depends(get_current_user)) -> Any:
-    """
-    Fetch the currently authenticated user's profile details.
-    """
-    return current_user
+@router.post("/reset-password")
+def reset_password(token: str, new_password: str, db: Session = Depends(get_db)) -> Any:
+    """Reset password using token from email."""
+    # TODO: Implement token validation and password update
+    return APIResponse.success(message="Password reset successful")

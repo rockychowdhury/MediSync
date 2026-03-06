@@ -40,9 +40,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """Get multiple records with pagination."""
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        """Create a new record from a Pydantic schema."""
-        obj_data = obj_in.model_dump()
+    def create(self, db: Session, *, obj_in: CreateSchemaType | dict[str, Any]) -> ModelType:
+        """Create a new record from a Pydantic schema or dict."""
+        if isinstance(obj_in, dict):
+            obj_data = obj_in
+        else:
+            obj_data = obj_in.model_dump()
         db_obj = self.model(**obj_data)
         db.add(db_obj)
         db.commit()
@@ -50,10 +53,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     def update(
-        self, db: Session, *, db_obj: ModelType, obj_in: UpdateSchemaType
+        self, db: Session, *, db_obj: ModelType, obj_in: UpdateSchemaType | dict[str, Any]
     ) -> ModelType:
-        """Update an existing record with partial data."""
-        update_data = obj_in.model_dump(exclude_unset=True)
+        """Update an existing record with partial data from schema or dict."""
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_obj, field, value)
         db.add(db_obj)

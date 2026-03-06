@@ -9,26 +9,27 @@
 
 ## Authentication Endpoints
 
-### `POST /auth/register`
+### `POST /auth/register` #OK   
 Create new user account with email, password, and role
 
-### `POST /auth/login`
+### `POST /auth/login` #OK
 Authenticate user and return JWT token
 
-### `POST /auth/logout`
+### `POST /auth/logout` #OK
 Invalidate current session token
 
-### `POST /auth/forgot-password`
+### `PUT /auth/change-password` #TODO
+Change password for authenticated user
+
+### `POST /auth/forgot-password` #TODO
 Send password reset link to user's email
 
-### `POST /auth/reset-password`
+### `POST /auth/reset-password` #TODO
 Reset password using token from email
 
-### `GET /auth/me`
+### `GET /auth/me` #OK
 Get currently authenticated user details
 
-### `PUT /auth/change-password`
-Change password for authenticated user
 
 ---
 

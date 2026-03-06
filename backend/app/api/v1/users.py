@@ -134,7 +134,7 @@ def delete_user(
     return APIResponse.success(message=ResponseMessages.DELETED_SUCCESS)
 
 @router.patch("/{id}/activate")
-def activate_user(
+async def activate_user(
     *,
     db: Session = Depends(get_db),
     id: str,
@@ -147,7 +147,7 @@ def activate_user(
             message=ResponseMessages.USER_NOT_FOUND,
             status_code=status.HTTP_404_NOT_FOUND,
         )
-    updated_user = UserService.activate_user(db, db_obj=user, actor_id=current_admin.id)
+    updated_user = await UserService.activate_user(db, db_obj=user, actor_id=current_admin.id)
     return APIResponse.success(message="Account activated successfully")
 
 @router.patch("/{id}/deactivate")

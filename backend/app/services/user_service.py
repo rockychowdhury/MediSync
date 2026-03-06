@@ -5,6 +5,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import get_password_hash
 from app.crud.crud_activity_log import activity_log as log_crud
+from app.services.email_service import EmailService
 
 class UserService:
     @staticmethod
@@ -93,7 +94,7 @@ class UserService:
         return user
 
     @staticmethod
-    def activate_user(db: Session, *, db_obj: User, actor_id: str) -> User:
+    async def activate_user(db: Session, *, db_obj: User, actor_id: str) -> User:
         user = crud.user.update(db, db_obj=db_obj, obj_in={"is_active": True, "deleted_at": None})
         UserService.log_activity(
             db,
@@ -102,6 +103,7 @@ class UserService:
             entity_id=user.id,
             description=f"Activated/Restored user {user.email}"
         )
+        await EmailService.send_account_activation_email(email=user.email, name=user.name)
         return user
 
     @staticmethod
@@ -113,5 +115,19 @@ class UserService:
             action="CHANGE_PASSWORD",
             entity_id=user.id,
             description="Changed user password"
+        )
+        return user
+
+    @staticmethod
+    def reset_password(db: Session, *, db_obj: User, new_password: str) -> User:
+        # Update user password
+        user = crud.user.update(db, db_obj=db_obj, obj_in={"password": new_password})
+        
+        UserService.log_activity(
+            db,
+            user_id=user.id,
+            action="RESET_PASSWORD",
+            entity_id=user.id,
+            description="Reset password via secure token"
         )
         return user

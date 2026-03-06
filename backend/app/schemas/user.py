@@ -16,7 +16,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, max_length=128)
+    password: str = Field(..., min_length=8, max_length=72)
     
     model_config = {"extra": "forbid"}
 
@@ -33,6 +33,19 @@ class UserUpdate(BaseModel):
 class ProfileUpdate(BaseModel):
     name: str | None = Field(None, max_length=150)
     email: EmailStr | None = None
+
+    model_config = {"extra": "forbid"}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+    model_config = {"extra": "forbid"}
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8, max_length=72)
 
     model_config = {"extra": "forbid"}
 

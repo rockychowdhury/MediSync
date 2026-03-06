@@ -14,7 +14,7 @@ router = APIRouter()
 
 class PasswordChangeRequest(BaseModel):
     old_password: str
-    new_password: str = Field(..., min_length=8)
+    new_password: str = Field(..., min_length=8, max_length=72)
 
 @router.get("/me")
 def read_current_user(current_user: User = Depends(get_current_user)) -> Any:

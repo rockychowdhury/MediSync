@@ -6,6 +6,7 @@
 # ── Backend environment ──
 backend/.env
 backend/venv/
+backend/emails/
 
 # ── Frontend environment ──
 frontend/.env.local

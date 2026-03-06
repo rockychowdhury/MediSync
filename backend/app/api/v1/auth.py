@@ -9,8 +9,11 @@ from app.api.deps import get_db, get_current_user, get_current_active_admin
 from app.core.security import verify_password
 from app.core.auth import JWTAuthManager
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, ForgotPasswordRequest, ResetPasswordRequest
 from app.utils.response import APIResponse, ResponseMessages
+from app.services.email_service import EmailService
+from app.services.redis_token_service import RedisTokenService
+from app.services.user_service import UserService
 from fastapi import Response
 
 router = APIRouter()
@@ -90,18 +93,44 @@ def logout(response: Response) -> Any:
 
 
 @router.post("/forgot-password")
-def forgot_password(email: str, db: Session = Depends(get_db)) -> Any:
+async def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)) -> Any:
     """Send password reset link to user's email."""
-    user = crud.user.get_by_email(db, email=email)
+    user = crud.user.get_by_email(db, email=req.email)
     if not user:
          # Return success anyway to prevent email enumeration
          return APIResponse.success(message="Password reset email sent if account exists")
     
-    # TODO: Implement token generation and email sending
+    # Generate a temporary token
+    import secrets
+    token = secrets.token_urlsafe(32)
+    
+    # Store token in Redis (5 min TTL)
+    RedisTokenService.store_reset_token(token=token, user_id=user.id)
+    
+    await EmailService.send_password_reset_email(email=user.email, token=token)
     return APIResponse.success(message="Password reset email sent")
 
+
 @router.post("/reset-password")
-def reset_password(token: str, new_password: str, db: Session = Depends(get_db)) -> Any:
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)) -> Any:
     """Reset password using token from email."""
-    # TODO: Implement token validation and password update
+    # Validate token from Redis
+    user_id = RedisTokenService.verify_reset_token(token=req.token)
+    if not user_id:
+        return APIResponse.error(
+            message="Invalid or expired reset token",
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Get user object
+    user = crud.user.get(db, id=user_id)
+    if not user:
+        return APIResponse.error(
+            message="User not found",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    # Reset password
+    UserService.reset_password(db, db_obj=user, new_password=req.new_password)
+    
     return APIResponse.success(message="Password reset successful")

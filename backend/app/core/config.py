@@ -20,6 +20,18 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str
 
+    # Email
+    MAIL_USERNAME: str | None = None
+    MAIL_PASSWORD: str | None = None
+    MAIL_FROM: str | None = "info@medisync.com"
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str | None = None
+    MAIL_FROM_NAME: str = "MediSync"
+
+    # Redis (Upstash)
+    UPSTASH_REDIS_URL: str | None = None
+    UPSTASH_REDIS_TOKEN: str | None = None
+
     @property
     def cors_origins(self) -> List[str]:
         """Parse comma-separated CORS origins into a list."""

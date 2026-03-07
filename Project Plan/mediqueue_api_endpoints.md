@@ -18,13 +18,13 @@ Authenticate user and return JWT token
 ### `POST /auth/logout` #OK
 Invalidate current session token
 
-### `PUT /auth/change-password` #TODO
+### `PUT /auth/change-password` #ok
 Change password for authenticated user
 
-### `POST /auth/forgot-password` #TODO
+### `POST /auth/forgot-password` #ok
 Send password reset link to user's email
 
-### `POST /auth/reset-password` #TODO
+### `POST /auth/reset-password` #ok
 Reset password using token from email
 
 ### `GET /auth/me` #OK
@@ -35,25 +35,25 @@ Get currently authenticated user details
 
 ## User Management Endpoints (Admin Only)
 
-### `GET /users`
+### `GET /users` #ok
 Get list of all users with pagination and filters
 
-### `GET /users/:id`
+### `GET /users/:id` #ok
 Get single user details by ID
 
-### `POST /users`
+### `POST /users` #ok
 Create new user (admin/receptionist/provider)
 
-### `PUT /users/:id`
+### `PUT /users/:id` #ok
 Update user information and role
 
-### `DELETE /users/:id`
+### `DELETE /users/:id` #ok
 Deactivate user account (soft delete)
 
-### `PATCH /users/:id/activate`
+### `PATCH /users/:id/activate` #ok
 Activate deactivated user account
 
-### `PATCH /users/:id/deactivate`
+### `PATCH /users/:id/deactivate` #ok
 Deactivate active user account
 
 ---

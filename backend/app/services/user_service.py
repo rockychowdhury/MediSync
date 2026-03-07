@@ -16,13 +16,14 @@ class UserService:
         entity_id: str | None = None,
         description: str | None = None,
         old_val: dict | None = None,
-        new_val: dict | None = None
+        new_val: dict | None = None,
+        entity_type: str = "user"
     ):
-        log_crud.create(
+        return log_crud.create(
             db,
             user_id=user_id,
             action_type=action,
-            entity_type="user",
+            entity_type=entity_type,
             entity_id=entity_id,
             description=description,
             old_values=old_val,

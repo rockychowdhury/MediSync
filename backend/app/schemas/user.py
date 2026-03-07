@@ -59,11 +59,14 @@ class UserResponse(UserBase):
     locked_until: datetime | None = None
     created_at: datetime
     updated_at: datetime
+    
+    # Internal field to capture the relationship from ORM, excluded from response
+    role: Any = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def set_role_name(self) -> "UserResponse":
-        # If the object has a role relationship (SQLAlchemy model), extract the name
-        if hasattr(self, "role") and self.role:
+        # Pull role name from the internal role field if it exists
+        if self.role and hasattr(self.role, "name"):
              self.role_name = self.role.name
         return self
 

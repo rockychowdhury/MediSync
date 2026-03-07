@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, users, profile
+from app.api.v1 import auth, users, profile, patients, rbac
 from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
@@ -8,6 +8,8 @@ router = APIRouter()
 router.include_router(auth.router, prefix="/auth", tags=["auth"])
 router.include_router(users.router, prefix="/users", tags=["users"])
 router.include_router(profile.router, prefix="/profile", tags=["profile"])
+router.include_router(patients.router, prefix="/patients", tags=["patients"])
+router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 
 @router.get("/", tags=["v1"])
 def root():

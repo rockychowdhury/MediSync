@@ -13,6 +13,11 @@ class RoleCreate(RoleBase):
     pass
 
 
+class RoleUpdate(BaseModel):
+    name: str | None = Field(None, max_length=50)
+    description: str | None = None
+
+
 class RoleResponse(RoleBase):
     id: int
 
@@ -31,6 +36,11 @@ class PermissionCreate(PermissionBase):
     pass
 
 
+class PermissionUpdate(BaseModel):
+    name: str | None = Field(None, max_length=100)
+    description: str | None = None
+
+
 class PermissionResponse(PermissionBase):
     id: int
 
@@ -42,3 +52,7 @@ class PermissionResponse(PermissionBase):
 
 class RoleWithPermissions(RoleResponse):
     permissions: list[PermissionResponse] = []
+
+
+class RolePermissionUpdate(BaseModel):
+    permission_ids: list[int]

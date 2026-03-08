@@ -62,18 +62,6 @@ def create_user(
         status_code=status.HTTP_201_CREATED
     )
 
-@router.get("/roles")
-def read_roles(
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_active_admin),
-) -> Any:
-    """List all available roles."""
-    from app.models.role import Role
-    roles = db.query(Role).all()
-    return APIResponse.success(
-        message=ResponseMessages.RETRIEVED_SUCCESS,
-        data=[{"id": r.id, "name": r.name, "description": r.description} for r in roles]
-    )
 
 @router.get("/{id}", response_model=UserResponse)
 def read_user_by_id(

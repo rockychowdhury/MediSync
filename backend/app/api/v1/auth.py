@@ -123,7 +123,11 @@ def logout(
 
 
 @router.post("/forgot-password")
-async def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)) -> Any:
+async def forgot_password(
+    request: Request,
+    req: ForgotPasswordRequest, 
+    db: Session = Depends(get_db)
+) -> Any:
     """Send password reset link to user's email."""
     user = crud.user.get_by_email(db, email=req.email)
     if not user:
@@ -138,6 +142,15 @@ async def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_
     RedisTokenService.store_reset_token(token=token, user_id=user.id)
     
     await EmailService.send_password_reset_email(email=user.email, token=token)
+    
+    UserService.log_activity(
+        db,
+        user_id=user.id,
+        action="FORGOT_PASSWORD_REQUEST",
+        entity_id=user.id,
+        description=f"Password reset link requested for {user.email}",
+        ip_address=request.client.host if request.client else None
+    )
     return APIResponse.success(message="Password reset email sent")
 
 

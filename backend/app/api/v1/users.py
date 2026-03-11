@@ -1,11 +1,12 @@
 from typing import Any
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, Request
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import get_db, get_current_active_admin
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
+from app.schemas.activity_log import ActivityLogListResponse
 from app.services.user_service import UserService
 from app.utils.response import APIResponse, ResponseMessages
 
@@ -34,6 +35,7 @@ def read_users(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_user(
     *,
+    request: Request,
     db: Session = Depends(get_db),
     user_in: UserCreate,
     current_admin: User = Depends(get_current_active_admin),
@@ -55,7 +57,12 @@ def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    user = UserService.create_user(db, obj_in=user_in, actor_id=current_admin.id)
+    user = UserService.create_user(
+        db, 
+        obj_in=user_in, 
+        actor_id=current_admin.id,
+        ip_address=request.client.host if request.client else None
+    )
     return APIResponse.success(
         message=ResponseMessages.CREATED_SUCCESS,
         data=UserResponse.model_validate(user),
@@ -84,6 +91,7 @@ def read_user_by_id(
 @router.put("/{id}", response_model=UserResponse)
 def update_user(
     *,
+    request: Request,
     db: Session = Depends(get_db),
     id: str,
     user_in: UserUpdate,
@@ -98,7 +106,13 @@ def update_user(
         )
     
     # Logic for role update: user allows updating role too
-    updated_user = UserService.update_user(db, db_obj=user, obj_in=user_in, actor_id=current_admin.id)
+    updated_user = UserService.update_user(
+        db, 
+        db_obj=user, 
+        obj_in=user_in, 
+        actor_id=current_admin.id,
+        ip_address=request.client.host if request.client else None
+    )
     return APIResponse.success(
         message=ResponseMessages.UPDATED_SUCCESS,
         data=UserResponse.model_validate(updated_user)
@@ -107,6 +121,7 @@ def update_user(
 @router.delete("/{id}")
 def delete_user(
     *,
+    request: Request,
     db: Session = Depends(get_db),
     id: str,
     current_admin: User = Depends(get_current_active_admin),
@@ -118,12 +133,18 @@ def delete_user(
             message=ResponseMessages.USER_NOT_FOUND,
             status_code=status.HTTP_404_NOT_FOUND,
         )
-    updated_user = UserService.soft_delete_user(db, db_obj=user, actor_id=current_admin.id)
+    updated_user = UserService.soft_delete_user(
+        db, 
+        db_obj=user, 
+        actor_id=current_admin.id,
+        ip_address=request.client.host if request.client else None
+    )
     return APIResponse.success(message=ResponseMessages.DELETED_SUCCESS)
 
 @router.patch("/{id}/activate")
 async def activate_user(
     *,
+    request: Request,
     db: Session = Depends(get_db),
     id: str,
     current_admin: User = Depends(get_current_active_admin),
@@ -135,12 +156,18 @@ async def activate_user(
             message=ResponseMessages.USER_NOT_FOUND,
             status_code=status.HTTP_404_NOT_FOUND,
         )
-    updated_user = await UserService.activate_user(db, db_obj=user, actor_id=current_admin.id)
+    updated_user = await UserService.activate_user(
+        db, 
+        db_obj=user, 
+        actor_id=current_admin.id,
+        ip_address=request.client.host if request.client else None
+    )
     return APIResponse.success(message="Account activated successfully")
 
 @router.patch("/{id}/deactivate")
 def deactivate_user(
     *,
+    request: Request,
     db: Session = Depends(get_db),
     id: str,
     current_admin: User = Depends(get_current_active_admin),
@@ -152,5 +179,53 @@ def deactivate_user(
             message=ResponseMessages.USER_NOT_FOUND,
             status_code=status.HTTP_404_NOT_FOUND,
         )
-    updated_user = UserService.deactivate_user(db, db_obj=user, actor_id=current_admin.id)
+    updated_user = UserService.deactivate_user(
+        db, 
+        db_obj=user, 
+        actor_id=current_admin.id,
+        ip_address=request.client.host if request.client else None
+    )
     return APIResponse.success(message="Account deactivated successfully")
+@router.get("/{id}/audit", response_model=ActivityLogListResponse)
+def read_user_audit(
+    id: str,
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    current_admin: User = Depends(get_current_active_admin),
+) -> Any:
+    """
+    Retrieve audit trail for a specific user (Admin only).
+    """
+    user = crud.user.get(db, id=id)
+    if not user:
+        return APIResponse.error(
+            message=ResponseMessages.USER_NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+    
+    logs, total = crud.activity_log.get_multi_filtered(
+        db, skip=skip, limit=limit, user_id=id
+    )
+    
+    data = []
+    for log in logs:
+        data.append({
+            "id": log.id,
+            "user_id": log.user_id,
+            "user_name": log.user.name if log.user else "System",
+            "action_type": log.action_type,
+            "entity_type": log.entity_type,
+            "entity_id": log.entity_id,
+            "description": log.description,
+            "old_values": log.old_values,
+            "new_values": log.new_values,
+            "ip_address": log.ip_address,
+            "created_at": log.created_at,
+        })
+
+    return APIResponse.paginated_success(
+        message=ResponseMessages.RETRIEVED_SUCCESS,
+        data=data,
+        pagination_data={"total": total, "skip": skip, "limit": limit}
+    )

@@ -15,7 +15,8 @@ class PatientService:
         patient_id: str | None = None,
         description: str | None = None,
         old_val: dict | None = None,
-        new_val: dict | None = None
+        new_val: dict | None = None,
+        ip_address: str | None = None
     ):
         """Helper to log patient-related activities using the shared log_activity logic."""
         UserService.log_activity(
@@ -26,11 +27,12 @@ class PatientService:
             description=description,
             old_val=old_val,
             new_val=new_val,
-            entity_type="patient"
+            entity_type="patient",
+            ip_address=ip_address
         )
 
     @staticmethod
-    def create_patient(db: Session, *, obj_in: PatientCreate, actor_id: str) -> Patient:
+    def create_patient(db: Session, *, obj_in: PatientCreate, actor_id: str, ip_address: str | None = None) -> Patient:
         # Deep Duplicate Check: Name + DOB + Email
         existing = crud.patient.get_by_identity(
             db, 
@@ -48,7 +50,8 @@ class PatientService:
             action="CREATE_PATIENT",
             patient_id=str(patient.id),
             description=f"Registered patient {patient.name}",
-            new_val=obj_in.model_dump(mode="json")
+            new_val=obj_in.model_dump(mode="json"),
+            ip_address=ip_address
         )
         return patient
 
@@ -58,7 +61,8 @@ class PatientService:
         *, 
         db_obj: Patient, 
         obj_in: PatientUpdate | dict[str, Any], 
-        actor_id: str
+        actor_id: str,
+        ip_address: str | None = None
     ) -> Patient:
         old_data = {
             "name": db_obj.name, 
@@ -82,30 +86,33 @@ class PatientService:
             patient_id=str(patient.id),
             description=f"Updated details for patient {patient.name}",
             old_val=old_data,
-            new_val=new_data
+            new_val=new_data,
+            ip_address=ip_address
         )
         return patient
 
     @staticmethod
-    def soft_delete_patient(db: Session, *, db_obj: Patient, actor_id: str) -> Patient:
+    def soft_delete_patient(db: Session, *, db_obj: Patient, actor_id: str, ip_address: str | None = None) -> Patient:
         patient = crud.patient.update(db, db_obj=db_obj, obj_in={"is_active": False})
         PatientService.log_patient_activity(
             db,
             actor_id=actor_id,
             action="DEACTIVATE_PATIENT",
             patient_id=str(patient.id),
-            description=f"Soft deleted patient {patient.name}"
+            description=f"Soft deleted patient {patient.name}",
+            ip_address=ip_address
         )
         return patient
 
     @staticmethod
-    def activate_patient(db: Session, *, db_obj: Patient, actor_id: str) -> Patient:
+    def activate_patient(db: Session, *, db_obj: Patient, actor_id: str, ip_address: str | None = None) -> Patient:
         patient = crud.patient.update(db, db_obj=db_obj, obj_in={"is_active": True})
         PatientService.log_patient_activity(
             db,
             actor_id=actor_id,
             action="ACTIVATE_PATIENT",
             patient_id=str(patient.id),
-            description=f"Restored patient {patient.name}"
+            description=f"Restored patient {patient.name}",
+            ip_address=ip_address
         )
         return patient

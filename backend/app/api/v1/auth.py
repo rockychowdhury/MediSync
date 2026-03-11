@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,7 @@ router = APIRouter()
 
 @router.post("/login")
 def login(
+    request: Request,
     response: Response,
     db: Session = Depends(get_db), 
     form_data: OAuth2PasswordRequestForm = Depends()
@@ -56,6 +57,15 @@ def login(
             user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
         db.add(user)
         db.commit()
+        
+        UserService.log_activity(
+            db,
+            user_id=user.id,
+            action="login_failed",
+            description=f"Failed login attempt for {user.email}",
+            ip_address=request.client.host if request.client else None
+        )
+        
         return APIResponse.error(
             message=ResponseMessages.INVALID_CREDENTIALS,
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -67,6 +77,14 @@ def login(
     user.locked_until = None
     db.add(user)
     db.commit()
+    
+    UserService.log_activity(
+        db,
+        user_id=user.id,
+        action="login_success",
+        description=f"Successful login for {user.email}",
+        ip_address=request.client.host if request.client else None
+    )
     
     access_token, refresh_token = JWTAuthManager.generate_token_pair(user.id, user.role_id)
     
@@ -83,10 +101,22 @@ def login(
     return response_obj
 
 @router.post("/logout")
-def logout(response: Response) -> Any:
+def logout(
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Any:
     """
     Clear authentication cookies to log out the user.
     """
+    UserService.log_activity(
+        db,
+        user_id=current_user.id,
+        action="logout",
+        description=f"User {current_user.email} logged out",
+        ip_address=request.client.host if request.client else None
+    )
     response_obj = APIResponse.success(message=ResponseMessages.LOGOUT_SUCCESS)
     JWTAuthManager.clear_auth_cookies(response_obj)
     return response_obj
@@ -112,7 +142,11 @@ async def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_
 
 
 @router.post("/reset-password")
-def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)) -> Any:
+def reset_password(
+    request: Request,
+    req: ResetPasswordRequest, 
+    db: Session = Depends(get_db)
+) -> Any:
     """Reset password using token from email."""
     # Validate token from Redis
     user_id = RedisTokenService.verify_reset_token(token=req.token)
@@ -131,6 +165,11 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)) -> 
         )
 
     # Reset password
-    UserService.reset_password(db, db_obj=user, new_password=req.new_password)
+    UserService.reset_password(
+        db, 
+        db_obj=user, 
+        new_password=req.new_password,
+        ip_address=request.client.host if request.client else None
+    )
     
     return APIResponse.success(message="Password reset successful")

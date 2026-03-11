@@ -9,8 +9,14 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
         return db.query(self.model).filter(self.model.name == name).first()
 
     def assign_permissions(self, db: Session, *, db_obj: Role, permission_ids: list[int]) -> Role:
-        permissions = db.query(Permission).filter(Permission.id.in_(permission_ids)).all()
+        # Merge existing permission IDs with new ones to create a unique set
+        existing_ids = {p.id for p in db_obj.permissions}
+        all_ids = set(permission_ids).union(existing_ids)
+        
+        # Fetch all permission objects and assign to role
+        permissions = db.query(Permission).filter(Permission.id.in_(all_ids)).all()
         db_obj.permissions = permissions
+        
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

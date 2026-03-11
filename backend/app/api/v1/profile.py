@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.orm import Session
 
 from app import crud
@@ -32,13 +32,20 @@ def read_current_user(current_user: User = Depends(get_current_user)) -> Any:
 @router.put("/me")
 def update_current_user(
     *,
+    request: Request,
     db: Session = Depends(get_db),
     user_in: ProfileUpdate,
     current_user: User = Depends(get_current_user)
 ) -> Any:
     """Update basic profile information for the current user."""
     update_data = user_in.model_dump(exclude_unset=True)
-    updated_user = UserService.update_user(db, db_obj=current_user, obj_in=update_data, actor_id=current_user.id)
+    updated_user = UserService.update_user(
+        db, 
+        db_obj=current_user, 
+        obj_in=update_data, 
+        actor_id=current_user.id,
+        ip_address=request.client.host if request.client else None
+    )
     
     from app.schemas.user import UserResponse
     return APIResponse.success(
@@ -49,6 +56,7 @@ def update_current_user(
 @router.put("/change-password")
 def change_password(
     *,
+    request: Request,
     db: Session = Depends(get_db),
     pass_in: PasswordChangeRequest,
     current_user: User = Depends(get_current_user)
@@ -61,5 +69,11 @@ def change_password(
             status_code=status.HTTP_400_BAD_REQUEST
         )
     
-    UserService.change_password(db, db_obj=current_user, new_password=pass_in.new_password, actor_id=current_user.id)
+    UserService.change_password(
+        db, 
+        db_obj=current_user, 
+        new_password=pass_in.new_password, 
+        actor_id=current_user.id,
+        ip_address=request.client.host if request.client else None
+    )
     return APIResponse.success(message=ResponseMessages.PASSWORD_CHANGED)

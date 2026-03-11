@@ -104,13 +104,13 @@ Get list of all services with active/inactive filter
 Get single service details
 
 ### `POST /services`
-Create new service type
+Create new service info
 
 ### `PUT /services/:id`
-Update service details (name, duration, specialization)
+Update service details (name, duration, specialization, etc.)
 
 ### `DELETE /services/:id`
-Delete service (only if not used in appointments)
+Delete service (only if not used in appointments otehr wise deactivate)
 
 ### `PATCH /services/:id/activate`
 Activate inactive service

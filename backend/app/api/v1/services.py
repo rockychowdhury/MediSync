@@ -1,6 +1,7 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query, status, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from app import crud
 from app.api.deps import get_db, get_current_active_admin, get_current_user
@@ -90,7 +91,14 @@ def create_service(
     current_admin: User = Depends(get_current_active_admin),
 ) -> Any:
     """Create a new clinical service (Admin only)."""
-    service = crud.service.create(db, obj_in=service_in)
+    try:
+        service = crud.service.create(db, obj_in=service_in)
+    except IntegrityError:
+        db.rollback()
+        return APIResponse.error(
+            message="Invalid data: Required specialization does not exist or valid constraints failed.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
     
     # Audit Logging
     UserService.log_activity(
@@ -128,7 +136,14 @@ def update_service(
         )
     
     old_data = ServiceResponse.model_validate(service_db).model_dump(mode="json")
-    updated_service = crud.service.update(db, db_obj=service_db, obj_in=service_in)
+    try:
+        updated_service = crud.service.update(db, db_obj=service_db, obj_in=service_in)
+    except IntegrityError:
+        db.rollback()
+        return APIResponse.error(
+            message="Invalid data: Required specialization does not exist or valid constraints failed.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
     new_data = ServiceResponse.model_validate(updated_service).model_dump(mode="json")
     
     # Audit Logging

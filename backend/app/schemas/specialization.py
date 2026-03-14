@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Specialization Schemas ═══════════════════════
 
 
-class SpecializationBase(BaseModel):
+class SpecializationBase(CoreModel):
     name: str = Field(..., max_length=100, examples=["Cardiology"])
     description: str | None = None
 

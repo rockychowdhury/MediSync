@@ -1,12 +1,13 @@
 from datetime import date, datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import EmailStr, Field
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Patient Schemas ═══════════════════════
 
 
-class PatientBase(BaseModel):
+class PatientBase(CoreModel):
     name: str = Field(..., max_length=150)
     phone: str | None = Field(None, max_length=20)
     email: EmailStr | None = None
@@ -19,7 +20,7 @@ class PatientCreate(PatientBase):
     pass
 
 
-class PatientUpdate(BaseModel):
+class PatientUpdate(CoreModel):
     name: str | None = Field(None, max_length=150)
     phone: str | None = Field(None, max_length=20)
     email: EmailStr | None = None

@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Appointment Schemas ═══════════════════════
@@ -12,7 +13,7 @@ AppointmentStatus = Literal[
 AppointmentPriority = Literal["standard", "urgent", "emergency"]
 
 
-class AppointmentBase(BaseModel):
+class AppointmentBase(CoreModel):
     patient_id: str
     provider_id: str
     service_id: str
@@ -26,7 +27,7 @@ class AppointmentCreate(AppointmentBase):
     created_by: str
 
 
-class AppointmentUpdate(BaseModel):
+class AppointmentUpdate(CoreModel):
     provider_id: str | None = None
     appointment_start: datetime | None = None
     appointment_end: datetime | None = None
@@ -36,7 +37,7 @@ class AppointmentUpdate(BaseModel):
     cancellation_reason: str | None = None
 
 
-class AppointmentStatusUpdate(BaseModel):
+class AppointmentStatusUpdate(CoreModel):
     """Lightweight schema for status-only transitions."""
     status: AppointmentStatus
     cancellation_reason: str | None = Field(

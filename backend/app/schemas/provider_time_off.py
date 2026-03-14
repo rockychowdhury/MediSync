@@ -1,13 +1,14 @@
 from datetime import date, datetime
 from datetime import time as time_type
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import Field, model_validator
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Provider Time Off Schemas ═══════════════════════
 
 
-class ProviderTimeOffBase(BaseModel):
+class ProviderTimeOffBase(CoreModel):
     provider_id: str
     start_date: date
     end_date: date
@@ -26,7 +27,7 @@ class ProviderTimeOffCreate(ProviderTimeOffBase):
     pass
 
 
-class ProviderTimeOffUpdate(BaseModel):
+class ProviderTimeOffUpdate(CoreModel):
     start_date: date | None = None
     end_date: date | None = None
     start_time: time_type | None = None

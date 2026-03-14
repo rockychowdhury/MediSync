@@ -2,7 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.schemas.core import CoreModel
 
 from app.schemas.specialization import SpecializationResponse
 
@@ -10,7 +11,7 @@ from app.schemas.specialization import SpecializationResponse
 # ═══════════════════════ Service Schemas ═══════════════════════
 
 
-class ServiceBase(BaseModel):
+class ServiceBase(CoreModel):
     name: str = Field(..., max_length=150)
     description: str | None = None
     category: str | None = Field(None, max_length=100)
@@ -25,7 +26,7 @@ class ServiceCreate(ServiceBase):
     pass
 
 
-class ServiceUpdate(BaseModel):
+class ServiceUpdate(CoreModel):
     name: str | None = Field(None, max_length=150)
     description: str | None = None
     category: str | None = Field(None, max_length=100)

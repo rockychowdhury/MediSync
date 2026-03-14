@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Role Schemas ═══════════════════════
 
 
-class RoleBase(BaseModel):
+class RoleBase(CoreModel):
     name: str = Field(..., max_length=50, examples=["admin"])
     description: str | None = None
 
@@ -13,7 +14,7 @@ class RoleCreate(RoleBase):
     pass
 
 
-class RoleUpdate(BaseModel):
+class RoleUpdate(CoreModel):
     name: str | None = Field(None, max_length=50)
     description: str | None = None
 
@@ -27,7 +28,7 @@ class RoleResponse(RoleBase):
 # ═══════════════════════ Permission Schemas ═══════════════════════
 
 
-class PermissionBase(BaseModel):
+class PermissionBase(CoreModel):
     name: str = Field(..., max_length=100, examples=["appointments.create"])
     description: str | None = None
 
@@ -36,7 +37,7 @@ class PermissionCreate(PermissionBase):
     pass
 
 
-class PermissionUpdate(BaseModel):
+class PermissionUpdate(CoreModel):
     name: str | None = Field(None, max_length=100)
     description: str | None = None
 
@@ -54,5 +55,5 @@ class RoleWithPermissions(RoleResponse):
     permissions: list[PermissionResponse] = []
 
 
-class RolePermissionUpdate(BaseModel):
+class RolePermissionUpdate(CoreModel):
     permission_ids: list[int]

@@ -2,7 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.schemas.core import CoreModel
 
 from app.schemas.specialization import SpecializationResponse
 
@@ -12,7 +13,7 @@ from app.schemas.specialization import SpecializationResponse
 ProviderStatus = Literal["available", "on_leave", "busy"]
 
 
-class ProviderBase(BaseModel):
+class ProviderBase(CoreModel):
     specialization_id: int
     consultation_fee: Decimal | None = Field(None, ge=0, max_digits=10, decimal_places=2)
     emergency_enabled: bool = False
@@ -24,7 +25,7 @@ class ProviderCreate(ProviderBase):
     id: str = Field(..., description="Must match an existing users.id (1:1 extension)")
 
 
-class ProviderUpdate(BaseModel):
+class ProviderUpdate(CoreModel):
     specialization_id: int | None = None
     consultation_fee: Decimal | None = Field(None, ge=0, max_digits=10, decimal_places=2)
     emergency_enabled: bool | None = None

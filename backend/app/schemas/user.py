@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import EmailStr, Field, model_validator
+from app.schemas.core import CoreModel
 
 from app.schemas.role import RoleResponse
 
@@ -9,7 +10,7 @@ from app.schemas.role import RoleResponse
 # ═══════════════════════ User Schemas ═══════════════════════
 
 
-class UserBase(BaseModel):
+class UserBase(CoreModel):
     name: str = Field(..., max_length=150)
     email: EmailStr
     role_id: int
@@ -21,7 +22,7 @@ class UserCreate(UserBase):
     model_config = {"extra": "forbid"}
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(CoreModel):
     name: str | None = Field(None, max_length=150)
     email: EmailStr | None = None
     role_id: int | None = None
@@ -30,20 +31,20 @@ class UserUpdate(BaseModel):
     model_config = {"extra": "forbid"}
 
 
-class ProfileUpdate(BaseModel):
+class ProfileUpdate(CoreModel):
     name: str | None = Field(None, max_length=150)
     email: EmailStr | None = None
 
     model_config = {"extra": "forbid"}
 
 
-class ForgotPasswordRequest(BaseModel):
+class ForgotPasswordRequest(CoreModel):
     email: EmailStr
 
     model_config = {"extra": "forbid"}
 
 
-class ResetPasswordRequest(BaseModel):
+class ResetPasswordRequest(CoreModel):
     token: str
     new_password: str = Field(..., min_length=8, max_length=72)
 

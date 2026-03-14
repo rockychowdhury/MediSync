@@ -1,13 +1,14 @@
 from datetime import time as time_type
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import Field, model_validator
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Availability Schemas ═══════════════════════
 
 
-class AvailabilityBase(BaseModel):
+class AvailabilityBase(CoreModel):
     provider_id: str
     day_of_week: int = Field(..., ge=0, le=6, description="0=Sunday … 6=Saturday")
     start_time: time_type
@@ -32,7 +33,7 @@ class AvailabilityCreate(AvailabilityBase):
     pass
 
 
-class AvailabilityUpdate(BaseModel):
+class AvailabilityUpdate(CoreModel):
     start_time: time_type | None = None
     end_time: time_type | None = None
     break_start: time_type | None = None

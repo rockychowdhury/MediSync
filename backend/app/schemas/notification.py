@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Notification Schemas ═══════════════════════
@@ -18,7 +19,7 @@ NotificationType = Literal[
 NotificationStatus = Literal["pending", "sent", "failed", "skipped"]
 
 
-class NotificationBase(BaseModel):
+class NotificationBase(CoreModel):
     recipient_type: Literal["patient", "user"]
     recipient_id: str
     appointment_id: str | None = None

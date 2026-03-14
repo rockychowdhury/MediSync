@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Waitlist Schemas ═══════════════════════
@@ -10,7 +11,7 @@ WaitlistPriority = Literal["standard", "urgent", "emergency"]
 WaitlistStatus = Literal["waiting", "assigned", "cancelled", "expired"]
 
 
-class WaitlistBase(BaseModel):
+class WaitlistBase(CoreModel):
     patient_id: str
     service_id: str
     provider_id: str | None = None
@@ -23,7 +24,7 @@ class WaitlistCreate(WaitlistBase):
     pass
 
 
-class WaitlistUpdate(BaseModel):
+class WaitlistUpdate(CoreModel):
     provider_id: str | None = None
     requested_date: date | None = None
     priority: WaitlistPriority | None = None

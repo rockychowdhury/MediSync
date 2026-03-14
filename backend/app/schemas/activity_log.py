@@ -1,9 +1,10 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
+from app.schemas.core import CoreModel
 from typing import Any
 
 
-class ActivityLogBase(BaseModel):
+class ActivityLogBase(CoreModel):
     action_type: str
     entity_type: str
     entity_id: str | None = None
@@ -25,6 +26,6 @@ class ActivityLogResponse(ActivityLogBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ActivityLogListResponse(BaseModel):
+class ActivityLogListResponse(CoreModel):
     items: list[ActivityLogResponse]
     total: int

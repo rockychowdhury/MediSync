@@ -33,7 +33,7 @@ class ActivityLog(Base):
     )
     entity_type: Mapped[str] = mapped_column(String(50), nullable=False)
     entity_id: Mapped[str | None] = mapped_column(
-        String(50), nullable=True, index=True
+        String(255), nullable=True, index=True
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 

@@ -5,19 +5,32 @@ from app.models.user import User
 
 class Permissions:
     """System-wide permission definitions corresponding to database seeded values."""
-    
-    # Provider permissions
+
+    # Patient permissions
+    PATIENT_CREATE = "patient:create"
+    PATIENT_READ = "patient:read"
+    PATIENT_LIST = "patient:list"
+    PATIENT_UPDATE = "patient:update"
+    PATIENT_DELETE = "patient:delete"
+    PATIENT_ACTIVATE = "patient:activate"
+
+    # Appointment permissions
+    APPOINTMENT_CREATE = "appointment:create"
+    APPOINTMENT_READ = "appointment:read"
+    APPOINTMENT_LIST = "appointment:list"
+    APPOINTMENT_STATUS_UPDATE = "appointment:status_update"
+
+    # Waitlist permissions
+    WAITLIST_CREATE = "waitlist:create"
+    WAITLIST_LIST = "waitlist:list"
+    WAITLIST_DELETE = "waitlist:delete"
+
+    # Provider permissions (legacy)
     VIEW_PROVIDER = "view_provider"
     CREATE_PROVIDER = "create_provider"
     UPDATE_PROVIDER = "update_provider"
     DELETE_PROVIDER = "delete_provider"
 
-    # Appointment permissions
-    VIEW_APPOINTMENT = "view_appointment"
-    CREATE_APPOINTMENT = "create_appointment"
-    UPDATE_APPOINTMENT = "update_appointment"
-    DELETE_APPOINTMENT = "delete_appointment"
-    
     # User / System permissions
     MANAGE_USERS = "manage_users"
     MANAGE_SETTINGS = "manage_settings"

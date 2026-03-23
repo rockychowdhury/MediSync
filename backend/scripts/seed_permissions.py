@@ -11,14 +11,24 @@ from app.models.role import Role, Permission, role_permissions
 def seed_permissions():
     db: Session = SessionLocal()
     try:
-        # 1. Define permissions
+        # 1. Define all permissions
         permissions_data = [
+            # Patient Management
             {"name": "patient:create", "description": "Can register new patients"},
             {"name": "patient:read", "description": "Can view patient profiles by ID"},
             {"name": "patient:list", "description": "Can search and list all patients"},
             {"name": "patient:update", "description": "Can edit patient information"},
             {"name": "patient:delete", "description": "Can soft-delete patient records"},
             {"name": "patient:activate", "description": "Can restore deactivated patients"},
+            # Appointment Management
+            {"name": "appointment:create", "description": "Can book new appointments"},
+            {"name": "appointment:read", "description": "Can view a specific appointment"},
+            {"name": "appointment:list", "description": "Can list and filter appointments"},
+            {"name": "appointment:status_update", "description": "Can transition appointment status (check-in, complete, cancel)"},
+            # Waitlist Management
+            {"name": "waitlist:create", "description": "Can add patients to the waitlist"},
+            {"name": "waitlist:list", "description": "Can view the ordered waitlist"},
+            {"name": "waitlist:delete", "description": "Can remove patients from the waitlist"},
         ]
 
         # 2. Bulk create permissions if they don't exist
@@ -41,11 +51,25 @@ def seed_permissions():
         # Admin gets everything
         admin.permissions = all_perms
         
-        # Receptionist gets everything for patients
-        receptionist.permissions = [p for p in all_perms if p.name.startswith("patient:")]
+        # Receptionist permissions
+        receptionist_perms = [
+            # Full patient management
+            "patient:create", "patient:read", "patient:list",
+            "patient:update", "patient:delete", "patient:activate",
+            # Full appointment management
+            "appointment:create", "appointment:read", "appointment:list", "appointment:status_update",
+            # Full waitlist management
+            "waitlist:create", "waitlist:list", "waitlist:delete",
+        ]
+        receptionist.permissions = [perm_map[p] for p in receptionist_perms if p in perm_map]
         
-        # Provider only gets specific permissions
-        provider.permissions = [perm_map["patient:read"]]
+        # Provider permissions (read-only + status updates on their own appointments)
+        provider_perms = [
+            "patient:read",
+            "appointment:read", "appointment:list", "appointment:status_update",
+            "waitlist:list",
+        ]
+        provider.permissions = [perm_map[p] for p in provider_perms if p in perm_map]
 
         db.commit()
         print("Successfully seeded permissions and role mappings!")

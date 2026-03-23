@@ -1,6 +1,10 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, users, profile, patients, rbac, activity_logs, specializations, services, providers, availability, provider_time_off
+from app.api.v1 import (
+    auth, users, profile, patients, rbac, activity_logs, 
+    specializations, services, providers, availability, 
+    provider_time_off, appointments, waitlist, websocket
+)
 from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
@@ -16,6 +20,9 @@ router.include_router(services.router, prefix="/services", tags=["services"])
 router.include_router(providers.router, prefix="/providers", tags=["providers"])
 router.include_router(availability.router, prefix="/availability", tags=["availability"])
 router.include_router(provider_time_off.router, prefix="/time-off", tags=["time-off"])
+router.include_router(appointments.router, prefix="/appointments", tags=["appointments"])
+router.include_router(waitlist.router, prefix="/waitlist", tags=["waitlist"])
+router.include_router(websocket.router, prefix="/ws", tags=["websocket"])
 
 @router.get("/", tags=["v1"])
 def root():

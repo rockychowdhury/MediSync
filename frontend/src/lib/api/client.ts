@@ -4,23 +4,19 @@ import type { ApiError } from "@/types/api";
 
 /** Axios instance pre-configured for the MediSync backend API */
 const apiClient: AxiosInstance = axios.create({
-  baseURL: siteConfig.apiUrl,
+  baseURL: "/api/v1", // Requests hit Next.js rewrites proxy
   timeout: siteConfig.apiTimeout,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Crucial: send HTTPOnly cookies
 });
 
 /* ── Request Interceptor ── */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Attach JWT token from localStorage if present
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("access_token");
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
+    // With HTTPOnly Cookies handled securely by browser/proxy,
+    // we simply return the config without local storage injections.
     return config;
   },
   (error) => Promise.reject(error)
@@ -30,14 +26,9 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiError>) => {
-    if (error.response?.status === 401) {
-      // Token expired or unauthorized — clear auth state
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
-      }
-    }
+    // The AuthObserver component natively watches for 401 unauthenticated
+    // status codes from `/api/v1/profile/me` checks globally avoiding
+    // race conditions, so we do not globally redirect from here.
     return Promise.reject(error);
   }
 );

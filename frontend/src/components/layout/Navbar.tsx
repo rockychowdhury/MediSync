@@ -79,18 +79,14 @@ export function Navbar() {
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/#solutions" legacyBehavior passHref>
-                  <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent tracking-wide text-[15px]")}>
-                    Solutions
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink href="/#solutions" className={cn(navigationMenuTriggerStyle(), "bg-transparent tracking-wide text-[15px]")}>
+                  Solutions
+                </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/#pricing" legacyBehavior passHref>
-                  <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "bg-transparent tracking-wide text-[15px]")}>
-                    Pricing
-                  </NavigationMenuLink>
-                </Link>
+                <NavigationMenuLink href="/#pricing" className={cn(navigationMenuTriggerStyle(), "bg-transparent tracking-wide text-[15px]")}>
+                  Pricing
+                </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
@@ -103,9 +99,9 @@ export function Navbar() {
               Log in
             </Button>
           </Link>
-          <Link href="/register">
+          <Link href="/#contact">
             <Button className="gradient-primary shadow-md hover:shadow-lg transition-all rounded-full px-6 tracking-wide font-medium">
-              Get Started
+              Contact Sales
             </Button>
           </Link>
         </div>

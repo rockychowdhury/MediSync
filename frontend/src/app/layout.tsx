@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
+import { ReduxProvider } from "@/components/providers/ReduxProvider";
+import { AuthObserver } from "@/components/auth/AuthObserver";
 import "./globals.css";
 
 const inter = Inter({
@@ -46,7 +48,13 @@ export default function RootLayout({
       className={`${inter.variable} ${montserrat.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <ReduxProvider>
+          <AuthObserver>
+            {children}
+          </AuthObserver>
+        </ReduxProvider>
+      </body>
     </html>
   );
 }

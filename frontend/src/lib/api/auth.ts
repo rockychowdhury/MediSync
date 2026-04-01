@@ -14,25 +14,23 @@ export interface LoginResponse {
   user: User;
 }
 
-export interface RegisterPayload {
-  full_name: string;
-  email: string;
-  password: string;
-  role: string;
-}
-
 export const authApi = {
-  login: (data: LoginPayload) =>
-    apiClient.post<ApiResponse<LoginResponse>>("/auth/login", data),
-
-  register: (data: RegisterPayload) =>
-    apiClient.post<ApiResponse<User>>("/auth/register", data),
+  login: (data: LoginPayload) => {
+    const formData = new URLSearchParams();
+    formData.append("username", data.email);
+    formData.append("password", data.password);
+    return apiClient.post<ApiResponse<LoginResponse>>("/auth/login", formData, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+  },
 
   logout: () =>
     apiClient.post<ApiResponse>("/auth/logout"),
 
   me: () =>
-    apiClient.get<ApiResponse<User>>("/auth/me"),
+    apiClient.get<ApiResponse<User>>("/profile/me"),
 
   changePassword: (data: { current_password: string; new_password: string }) =>
     apiClient.put<ApiResponse>("/auth/change-password", data),

@@ -6,6 +6,7 @@ export interface User {
   full_name: string;
   email: string;
   role: UserRole;
+  role_name?: UserRole; // FastAPI UserResponse schema mapping
   status: UserStatus;
   is_active: boolean;
   created_at: string;

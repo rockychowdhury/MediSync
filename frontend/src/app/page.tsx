@@ -9,37 +9,39 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      
+
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-background pt-16 md:pt-24 lg:pt-32 pb-16 md:pb-24">
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-primary/5 blur-3xl preserve-3d"></div>
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-3xl preserve-3d"></div>
-          
+
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center max-w-4xl">
             <div className="inline-flex items-center space-x-2 rounded-full px-3 py-1 text-sm font-medium bg-primary/10 text-primary mb-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
               <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
               <span>MediSync v2.0 is now live</span>
             </div>
-            
+
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-extrabold tracking-tight mb-8 text-foreground animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
               Healthcare Scheduling <br className="hidden md:block" />
               <span className="text-gradient-primary">Reimagined</span>
             </h1>
-            
+
             <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
               Intelligent appointment management, seamless patient flow, and powerful provider utilization tools for modern clinics.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-              <Button size="lg" className="gradient-primary w-full sm:w-auto text-lg h-12 px-8" asChild>
-                <Link href="/register">
-                  Start Free Trial <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg h-12 px-8" asChild>
-                <Link href="/login">Platform Demo</Link>
-              </Button>
+              <Link href="/#contact">
+                <Button size="lg" className="gradient-primary w-full sm:w-auto text-lg h-12 px-8">
+                  Request Demo <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg h-12 px-8">
+                  Platform Login
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

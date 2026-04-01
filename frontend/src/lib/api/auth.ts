@@ -1,43 +1,31 @@
 import apiClient from "./client";
-import type { ApiResponse } from "@/types/api";
-import type { User } from "@/types/user";
-
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  access_token: string;
-  refresh_token?: string;
-  token_type: string;
-  user: User;
-}
+import type { LoginFormData, RegisterFormData, AuthResponse } from "../validations/auth";
 
 export const authApi = {
-  login: (data: LoginPayload) => {
+  login: async (data: LoginFormData) => {
+    // FastAPI requires form data for OAuth2
     const formData = new URLSearchParams();
     formData.append("username", data.email);
     formData.append("password", data.password);
-    return apiClient.post<ApiResponse<LoginResponse>>("/auth/login", formData, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+
+    return apiClient.post<AuthResponse>("/auth/login", formData, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
   },
+  
+  logout: async () => {
+    return apiClient.post("/auth/logout");
+  },
 
-  logout: () =>
-    apiClient.post<ApiResponse>("/auth/logout"),
+  me: async () => {
+    return apiClient.get("/profile/me");
+  },
 
-  me: () =>
-    apiClient.get<ApiResponse<User>>("/profile/me"),
+  forgotPassword: async (email: string) => {
+    return apiClient.post("/auth/forgot-password", { email });
+  },
 
-  changePassword: (data: { current_password: string; new_password: string }) =>
-    apiClient.put<ApiResponse>("/auth/change-password", data),
-
-  forgotPassword: (email: string) =>
-    apiClient.post<ApiResponse>("/auth/forgot-password", { email }),
-
-  resetPassword: (data: { token: string; new_password: string }) =>
-    apiClient.post<ApiResponse>("/auth/reset-password", data),
+  resetPassword: async (token: string, new_password: string) => {
+    return apiClient.post("/auth/reset-password", { token, new_password });
+  }
 };

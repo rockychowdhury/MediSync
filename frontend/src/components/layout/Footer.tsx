@@ -28,7 +28,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-[15px] text-muted-foreground w-full max-w-sm leading-relaxed">
-              Bringing intelligent scheduling, seamless patient flow, and powerful provider management together in one unified healthcare operations platform.
+              A full-stack appointment management system that helps clinics optimize provider schedules, reduce no-shows, and streamline patient care through intelligent queue management.
             </p>
           </div>
 
@@ -38,32 +38,29 @@ export function Footer() {
           {/* Links Grid (Spans 6 columns) */}
           <div className="md:col-span-6 grid grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="space-y-4">
-              <h3 className="font-heading font-bold text-foreground text-sm tracking-widest uppercase">Platform</h3>
+              <h3 className="font-heading font-bold text-foreground text-sm tracking-widest uppercase">Project Features</h3>
               <ul className="space-y-3">
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Smart Scheduling</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Queue Management</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Patient Portal</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Pricing</Link></li>
+                <li><Link href="/#problem" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">The Challenge</Link></li>
+                <li><Link href="/#solution" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Our Solution</Link></li>
+                <li><Link href="/#features" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Features Showcase</Link></li>
               </ul>
             </div>
             
             <div className="space-y-4">
-              <h3 className="font-heading font-bold text-foreground text-sm tracking-widest uppercase">Company</h3>
+              <h3 className="font-heading font-bold text-foreground text-sm tracking-widest uppercase">Technology</h3>
               <ul className="space-y-3">
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Careers</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Contact Support</Link></li>
+                <li><Link href="/#technology" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Tech Stack</Link></li>
+                <li><Link href="/#capabilities" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">System Capabilities</Link></li>
+                <li><Link href="/#metrics" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Project Metrics</Link></li>
               </ul>
             </div>
             
             <div className="space-y-4">
-              <h3 className="font-heading font-bold text-foreground text-sm tracking-widest uppercase">Legal</h3>
+              <h3 className="font-heading font-bold text-foreground text-sm tracking-widest uppercase">Quick Links</h3>
               <ul className="space-y-3">
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">HIPAA Status</Link></li>
-                <li><Link href="#" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Security Overview</Link></li>
+                <li><a href="https://github.com/rockychowdhury" target="_blank" rel="noreferrer" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Source Code</a></li>
+                <li><Link href="/#contact" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Demo Credentials</Link></li>
+                <li><a href="mailto:demo@MediSync.com" className="text-[15px] text-muted-foreground hover:text-primary transition-colors">Contact</a></li>
               </ul>
             </div>
           </div>

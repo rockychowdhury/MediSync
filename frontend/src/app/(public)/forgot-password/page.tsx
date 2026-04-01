@@ -1,101 +1,115 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { authApi } from "@/lib/api/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Mail, ArrowLeft, Send } from "lucide-react";
+import { Loader2, ArrowLeft, MailCheck } from "lucide-react";
+
+// Inline validation for simple single-field form
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+type ForgotPasswordData = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSent, setIsSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleReset = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call to send reset email
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSent(true);
-    }, 1000);
+  const { register, handleSubmit, formState: { errors } } = useForm<ForgotPasswordData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: "onBlur"
+  });
+
+  const onSubmit = async (data: ForgotPasswordData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authApi.forgotPassword(data.email);
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <Card className="border-0 shadow-lg sm:border sm:shadow-sm">
-      <CardHeader className="space-y-1 pb-6 relative">
-        <Link 
-          href="/login"
-          className="absolute left-4 top-6 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="sr-only">Back to login</span>
+  if (success) {
+    return (
+      <div className="w-full animate-in fade-in zoom-in-95 duration-500 pt-10 flex flex-col items-center text-center">
+        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 ring-8 ring-blue-50/50">
+          <MailCheck className="w-8 h-8" />
+        </div>
+        <h1 className="text-3xl font-extrabold text-slate-900 mb-4 font-heading tracking-tight">Check your email</h1>
+        <p className="text-[15px] font-medium text-slate-500 mb-8 max-w-sm">
+          We've sent password reset instructions to your email address. If an account exists, you will receive it shortly.
+        </p>
+        <Link href="/login" className="w-full">
+          <Button className="w-full h-12 text-[15px] rounded-xl font-bold shadow-lg bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200">
+            Return to Login
+          </Button>
         </Link>
-        <CardTitle className="text-2xl font-heading font-bold text-center mt-2">
-          Reset password
-        </CardTitle>
-        <CardDescription className="text-center mt-2">
-          Enter your email and we&apos;ll send you instructions to reset your password
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        {isSent ? (
-          <div className="flex flex-col items-center justify-center space-y-4 py-4 text-center">
-            <div className="w-12 h-12 bg-success/20 rounded-full flex items-center justify-center mb-2">
-              <Mail className="h-6 w-6 text-success" />
-            </div>
-            <p className="font-medium text-foreground">Check your email</p>
-            <p className="text-sm text-muted-foreground">
-              We&apos;ve sent a password reset link to your email address.
-            </p>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="mt-6 w-full"
-              onClick={() => setIsSent(false)}
-            >
-              Try another email
-            </Button>
-          </div>
-        ) : (
-          <form onSubmit={handleReset} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
+      </div>
+    );
+  }
 
-            <Button type="submit" className="w-full gradient-primary mt-4" disabled={isLoading}>
-              {isLoading ? "Sending link..." : "Send Reset Link"}
-              {!isLoading && <Send className="ml-2 h-4 w-4" />}
-            </Button>
-          </form>
-        )}
-      </CardContent>
+  return (
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 pt-10">
       
-      {!isSent && (
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center text-muted-foreground">
-            Remember your password?{" "}
-            <Link
-              href="/login"
-              className="text-primary hover:text-primary-hover font-medium underline-offset-4 hover:underline"
-            >
-              Back to login
-            </Link>
-          </div>
-        </CardFooter>
+      <Link href="/login" className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-blue-600 mb-6 transition-colors">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to login
+      </Link>
+
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-slate-900 mb-2 font-heading tracking-tight">Reset Password</h1>
+        <p className="text-[15px] font-medium text-slate-500">
+          Enter your registered email address and we'll send you instructions to reset your password.
+        </p>
+      </div>
+
+      {error && (
+        <div className="mb-6 px-4 py-3 rounded-xl bg-red-50/80 border border-red-200 text-red-700 text-sm font-semibold animate-in shake flex items-center">
+          <div className="w-2 h-2 rounded-full bg-red-500 mr-2 shrink-0"></div>
+          {error}
+        </div>
       )}
-    </Card>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-2.5">
+          <Label htmlFor="email" className="text-slate-700 font-bold text-[14px]">Email Address</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            placeholder="name@example.com" 
+            className={`h-12 bg-white rounded-xl focus-visible:ring-blue-600 shadow-sm border-slate-200 transition-colors text-[15px] px-4 ${errors.email ? 'border-red-500 focus-visible:ring-red-500' : 'hover:border-slate-300'}`}
+            disabled={loading}
+            {...register("email")}
+          />
+          {errors.email && <p className="text-xs font-semibold text-red-500 mt-1">{errors.email.message}</p>}
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full h-12 text-[15px] rounded-xl font-bold shadow-lg shadow-blue-500/25 bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 disabled:opacity-70" 
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Sending verification email...
+            </span>
+          ) : (
+            "Send Reset Link"
+          )}
+        </Button>
+      </form>
+    </div>
   );
 }

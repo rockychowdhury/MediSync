@@ -23,14 +23,19 @@ const components: { title: string; href: string; description: string }[] = [
     description: "Automated booking and conflict resolution to maximize provider time.",
   },
   {
-    title: "Patient Portal",
-    href: "/#features",
-    description: "Self-service booking, intake forms, and automated reminders.",
-  },
-  {
     title: "Queue Management",
     href: "/#features",
-    description: "Real-time waiting room analytics and digital patient tracking.",
+    description: "Priority-based waitlist with automatic provider assignment.",
+  },
+  {
+    title: "Analytics Dashboard",
+    href: "/#solution",
+    description: "Real-time insights into provider utilization and clinic operations.",
+  },
+  {
+    title: "RBAC System",
+    href: "/#features",
+    description: "Secure multi-role system with granular permissions.",
   },
 ];
 
@@ -84,8 +89,8 @@ export function Navbar() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuLink href="/#pricing" className={cn(navigationMenuTriggerStyle(), "bg-transparent tracking-wide text-[15px]")}>
-                  Pricing
+                <NavigationMenuLink href="/#technology" className={cn(navigationMenuTriggerStyle(), "bg-transparent tracking-wide text-[15px]")}>
+                  Technology
                 </NavigationMenuLink>
               </NavigationMenuItem>
             </NavigationMenuList>
@@ -94,14 +99,14 @@ export function Navbar() {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link href="/login">
+          <Link href="https://github.com/rockychowdhury" target="_blank">
             <Button variant="ghost" className="hover:text-primary font-medium tracking-wide">
-              Log in
+              GitHub
             </Button>
           </Link>
-          <Link href="/#contact">
-            <Button className="gradient-primary shadow-md hover:shadow-lg transition-all rounded-full px-6 tracking-wide font-medium">
-              Contact Sales
+          <Link href="/login">
+            <Button className="gradient-primary shadow-md hover:shadow-lg transition-all rounded-full px-6 tracking-wide font-medium bg-blue-600 hover:bg-blue-700 text-white border-none">
+              View Live Demo
             </Button>
           </Link>
         </div>

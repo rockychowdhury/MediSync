@@ -12,7 +12,7 @@ from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
 
-@router.get("/", response_model=list[UserResponse])
+@router.get("")
 def read_users(
     db: Session = Depends(get_db),
     skip: int = 0,

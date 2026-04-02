@@ -9,6 +9,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 logger = logging.getLogger(__name__)
 
 
+import asyncio
+
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -20,8 +22,14 @@ class ConnectionManager:
     def __init__(self):
         # Maps channel_name -> set of connected WebSockets
         self.channels: dict[str, set[WebSocket]] = defaultdict(set)
+        self.main_loop: asyncio.AbstractEventLoop | None = None
+
+    async def _capture_loop(self):
+        if self.main_loop is None:
+            self.main_loop = asyncio.get_running_loop()
 
     async def subscribe(self, websocket: WebSocket, channel: str):
+        await self._capture_loop()
         await websocket.accept()
         self.channels[channel].add(websocket)
         logger.debug(f"Client connected to channel: {channel}. Total clients: {len(self.channels[channel])}")
@@ -72,6 +80,20 @@ class ConnectionManager:
         """
         for channel in channels:
             await self.broadcast(channel, event, data)
+
+    def broadcast_sync(self, channel: str, event: str, data: dict[str, Any]):
+        """
+        Safely fire a broadcast from a synchronous context (e.g. SQLAlchemy CRUD in a threadpool).
+        """
+        coro = self.broadcast(channel, event, data)
+        try:
+            # If we are already in an async context, just create a task
+            loop = asyncio.get_running_loop()
+            loop.create_task(coro)
+        except RuntimeError:
+            # We are in a sync thread. Send coroutine to the main event loop
+            if self.main_loop and self.main_loop.is_running():
+                asyncio.run_coroutine_threadsafe(coro, self.main_loop)
 
 
 # Singleton instance to be used across the application

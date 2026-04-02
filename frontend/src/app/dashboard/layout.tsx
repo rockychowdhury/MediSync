@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="min-h-screen bg-[#eef1f5] flex p-0 sm:p-2 lg:p-4 font-sans">
+    <div className="h-screen overflow-hidden bg-[#eef1f5] flex p-0 sm:p-2 lg:p-4 font-sans">
       
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
@@ -194,9 +194,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
 
           {/* Dynamic Page Content Render */}
-          <main className="flex-1 overflow-y-auto px-6 lg:px-10 pb-10">
-            {/* Limit max width nicely for huge screens but keep fluid for desktop */}
-            <div className="max-w-[1400px] w-full mx-auto relative isolate pt-4">
+          <main className="flex-1 overflow-hidden px-6 lg:px-10 pb-6 w-full">
+            {/* Fully bound the nested wrappers to 100% available viewport height */}
+            <div className="max-w-[1400px] w-full h-full mx-auto relative isolate pt-2">
               {children}
             </div>
           </main>

@@ -17,7 +17,7 @@ export interface UserUpdatePayload {
 
 export const usersApi = {
   getUsers: () =>
-    apiClient.get<ApiResponse<User[]>>("/users/"),
+    apiClient.get<ApiResponse<User[]>>("/users"),
 
   createUser: (data: UserCreatePayload) =>
     apiClient.post<ApiResponse<User>>("/users/", data),

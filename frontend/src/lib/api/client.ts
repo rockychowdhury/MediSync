@@ -26,9 +26,15 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiError>) => {
-    // The AuthObserver component natively watches for 401 unauthenticated
-    // status codes from `/api/v1/profile/me` checks globally avoiding
-    // race conditions, so we do not globally redirect from here.
+    // Check for 401 Unauthorized globally
+    if (error.response?.status === 401) {
+      const detail = error.response.data?.message || "Session expired";
+      console.warn(`[Auth API] 401 Unauthorized: ${detail}`);
+      
+      // We don't force a redirect here because the AuthObserver 
+      // component handles the global logout flow via Redux/Profile checks.
+    }
+    
     return Promise.reject(error);
   }
 );

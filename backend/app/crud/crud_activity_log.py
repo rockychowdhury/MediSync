@@ -4,6 +4,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 from app.models.activity_log import ActivityLog
 from app.models.user import User
+from app.services.websocket_manager import ws_manager
 
 class CRUDActivityLog:
     @property
@@ -39,6 +40,19 @@ class CRUDActivityLog:
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+        
+        # Broadcast the new log to the admin dashboard
+        ws_manager.broadcast_sync(
+            "dashboard:admin",
+            "audit_log_created",
+            {
+                "id": db_obj.id,
+                "action_type": db_obj.action_type,
+                "entity_type": db_obj.entity_type,
+                "entity_id": db_obj.entity_id,
+            }
+        )
+        
         return db_obj
 
     def get_multi_filtered(

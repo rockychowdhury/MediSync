@@ -10,7 +10,7 @@ from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
 
-@router.get("/", response_model=ActivityLogListResponse)
+@router.get("")
 def read_activity_logs(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
@@ -80,7 +80,7 @@ def read_activity_stats(
         data=stats
     )
 
-@router.get("/{id}", response_model=ActivityLogResponse)
+@router.get("/{id}")
 def read_activity_log(
     id: int,
     db: Session = Depends(get_db),

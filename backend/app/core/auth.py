@@ -16,8 +16,8 @@ class JWTAuthManager:
     # Cookie settings
     ACCESS_COOKIE_NAME = "access_token"
     REFRESH_COOKIE_NAME = "refresh_token"
-    COOKIE_SECURE = not settings.DEBUG  # True in production
-    COOKIE_SAMESITE = "lax"  # "none" if cross-origin
+    COOKIE_SECURE = not settings.DEBUG  # False (http) in dev, True (https) in prod
+    COOKIE_SAMESITE = "lax"  # Browser-default for same-domain cross-port (localhost:3000 -> 8000)
 
     @classmethod
     def generate_token_pair(cls, user_id: Any, role_id: int) -> Tuple[str, str]:

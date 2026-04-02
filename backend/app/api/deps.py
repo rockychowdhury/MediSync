@@ -4,14 +4,15 @@ Application-wide FastAPI dependencies.
 Provides database session management and user authentication logic.
 """
 
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status, Request, WebSocket
 from sqlalchemy.orm import Session
 from typing import Annotated
 
 from app.db.session import get_db
 from app.models.user import User
+from app.core.auth import JWTAuthManager
 
-__all__ = ["get_db", "get_current_user", "get_current_active_admin", "get_current_active_staff", "get_current_active_provider", "PermissionChecker"]
+__all__ = ["get_db", "get_current_user", "get_current_user_ws", "get_current_active_admin", "get_current_active_staff", "get_current_active_provider", "PermissionChecker"]
 
 def get_current_user(
     request: Request,
@@ -25,7 +26,7 @@ def get_current_user(
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail="Session has expired or credentials are missing",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -33,7 +34,7 @@ def get_current_user(
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail="Session payload is missing user identification",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -41,8 +42,9 @@ def get_current_user(
     user = user_crud.get(db, id=user_id)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The user associated with this session no longer exists",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     
     # We might want to check if account is disabled depending on User model
@@ -138,3 +140,26 @@ class PermissionChecker:
             )
         
         return current_user
+
+
+async def get_current_user_ws(
+    websocket: WebSocket,
+) -> dict:
+    """
+    Authenticates a WebSocket connection using cookies.
+    Validates the JWT signature only — no DB hit required.
+    This prevents WebSocket connections from consuming DB pool slots.
+    """
+    access_token = websocket.cookies.get(JWTAuthManager.ACCESS_COOKIE_NAME)
+    
+    if not access_token:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        
+    payload = JWTAuthManager.validate_token(access_token, "access")
+    if not payload:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    # Return the JWT payload directly — no DB lookup needed
+    return payload

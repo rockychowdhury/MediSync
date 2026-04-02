@@ -1,11 +1,16 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.services.websocket_manager import ws_manager
+from app.api.deps import get_current_user_ws
 
 router = APIRouter()
 
 
 @router.websocket("/{channel}")
-async def websocket_endpoint(websocket: WebSocket, channel: str):
+async def websocket_endpoint(
+    websocket: WebSocket, 
+    channel: str,
+    user_payload: dict = Depends(get_current_user_ws)
+):
     """
     Connect to a specific WebSocket channel.
     Available channels:

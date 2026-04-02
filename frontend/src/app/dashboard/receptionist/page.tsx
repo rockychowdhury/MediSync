@@ -3,171 +3,131 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Calendar, UserPlus, FileText, Search, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/dashboard/ui/PageHeader";
+import { DashboardCard, MetricCard } from "@/components/dashboard/ui/DashboardCard";
+import { Loader2, Plus, Clock, CheckCircle2 } from "lucide-react";
 
-export default function ReceptionistDashboardPage() {
+export default function ReceptionistQueuePage() {
   const user = useSelector((state: RootState) => state.auth.user);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [activeSubTab, setActiveSubTab] = useState('all');
 
-  // Mock data for presentation
-  const waitlist = [
-    { id: 1, name: "Emma Watson", doctor: "Dr. Smith", waitTime: "15 mins", priority: "Normal" },
-    { id: 2, name: "James Bond", doctor: "Dr. Patel", waitTime: "45 mins", priority: "High" },
-    { id: 3, name: "Bruce Wayne", doctor: "Dr. Smith", waitTime: "5 mins", priority: "Normal" },
+  // Specific Receptionist Queue Mocks matching dashboard.md structure
+  const stats = {
+    scheduled: 45,
+    checked_in: 12,
+    in_progress: 3,
+    completed: 28,
+  };
+
+  const providers = [
+    { id: 'all', label: 'All Providers' },
+    { id: '1', label: 'Dr. Sarah Jenkins' },
+    { id: '2', label: 'Dr. Marcus Chen' },
   ];
+
+  const queue = [
+    { id: 1, time: "09:00 AM", patient: "James Collins", service: "Annual Checkup", duration: "30m", status: "completed", provider_id: '1' },
+    { id: 2, time: "09:30 AM", patient: "Maria Garcia", service: "Urgent Consultation", duration: "15m", status: "in_progress", provider_id: '1' },
+    { id: 3, time: "09:45 AM", patient: "David Kim", service: "Blood Work", duration: "15m", status: "checked_in", provider_id: '2' },
+    { id: 4, time: "10:00 AM", patient: "Emma Watson", service: "Follow-up", duration: "30m", status: "scheduled", provider_id: '2' },
+  ];
+
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 500);
+  }, []);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
       </div>
     );
   }
 
+  const filteredQueue = activeSubTab === 'all' ? queue : queue.filter(q => q.provider_id === activeSubTab);
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Front Desk Overview</h2>
-          <p className="text-slate-500">Welcome, {user?.full_name?.split(' ')[0] || "Receptionist"}. Access waitlists and scheduling.</p>
-        </div>
-        <div className="flex gap-3">
-          <Button className="bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-sm">
-            <Search className="w-4 h-4 mr-2" />
-            Find Patient
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
-            <UserPlus className="w-4 h-4 mr-2" />
-            New Walk-in
-          </Button>
-        </div>
+    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+      
+      <PageHeader 
+        breadcrumbs={["Home", "Reception", "Today's Queue"]} 
+        title={new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date())} 
+        actionContent={
+          <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[14px] font-bold shadow-md shadow-blue-500/20 hover:bg-blue-700 transition-colors">
+            <Plus className="w-4 h-4" />
+            <span>Walk-In Booking</span>
+          </button>
+        }
+      />
+
+      {/* KPI Stats Strip */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <MetricCard title="Scheduled" value={stats.scheduled} />
+        <MetricCard title="Checked In" value={stats.checked_in} />
+        <MetricCard title="In Progress" value={stats.in_progress} />
+        <MetricCard title="Completed" value={stats.completed} />
       </div>
 
-      {/* KPI Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Active Waitlist</CardTitle>
-            <UsersIcon className="h-4 w-4 text-slate-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">8</div>
-            <p className="text-xs text-amber-600 font-medium mt-1">Patients waiting</p>
-          </CardContent>
-        </Card>
+      {/* Main Queue Dashboard */}
+      <DashboardCard className="mt-4 p-0">
         
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Checked In Today</CardTitle>
-            <CheckIcon className="h-4 w-4 text-slate-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">42</div>
-            <p className="text-xs text-slate-500 mt-1">Target: 60</p>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Provider Sub Tabs */}
+        <div className="flex border-b border-slate-100 overflow-x-auto hidden-scrollbar px-2 bg-[#fdfdfd]">
+          {providers.map(provider => (
+            <button
+              key={provider.id}
+              onClick={() => setActiveSubTab(provider.id)}
+              className={`px-6 py-4 text-[14px] font-bold border-b-[3px] transition-colors whitespace-nowrap ${
+                activeSubTab === provider.id 
+                  ? "border-blue-600 text-blue-700" 
+                  : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+              }`}
+            >
+              {provider.label}
+            </button>
+          ))}
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Waitlist Table */}
-        <Card className="md:col-span-2 shadow-sm border-slate-200">
-          <CardHeader>
-            <CardTitle>Live Waitlist</CardTitle>
-            <CardDescription>
-              Currently checked in patients waiting for provider assignment.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-500">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-700 border-y border-slate-200">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 font-semibold">Patient</th>
-                    <th scope="col" className="px-4 py-3 font-semibold">Provider</th>
-                    <th scope="col" className="px-4 py-3 font-semibold">Wait Time</th>
-                    <th scope="col" className="px-4 py-3 font-semibold">Priority</th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {waitlist.map((item) => (
-                    <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                      <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
-                      <td className="px-4 py-3">{item.doctor}</td>
-                      <td className="px-4 py-3">
-                        <span className={`font-mono ${parseInt(item.waitTime) > 30 ? 'text-red-600 font-bold' : ''}`}>
-                          {item.waitTime}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                          ${item.priority === 'High' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-800'}`}>
-                          {item.priority}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Button variant="outline" size="sm" className="h-8">Assign</Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader>
-            <CardTitle>Master Schedule</CardTitle>
-            <CardDescription>
-              Quickly check provider availability.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <Input placeholder="Search providers..." className="pl-9 h-10 border-slate-200" />
-            </div>
-            
-            <div className="space-y-3 mt-4">
-              <div className="flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:border-blue-200 cursor-pointer transition-colors bg-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm">JS</div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 leading-none">Dr. Smith</p>
-                    <p className="text-xs text-slate-500 mt-1">Cardiology</p>
-                  </div>
-                </div>
-                <div className="w-2 h-2 rounded-full bg-green-500" title="Available"></div>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:border-blue-200 cursor-pointer transition-colors bg-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-sm">KP</div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900 leading-none">Dr. Patel</p>
-                    <p className="text-xs text-slate-500 mt-1">General Practice</p>
-                  </div>
-                </div>
-                <div className="w-2 h-2 rounded-full bg-red-500" title="Busy"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Queue Table */}
+        <div className="p-6">
+          <table className="w-full text-[14px]">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="text-left py-3 font-bold text-slate-400 uppercase tracking-wider text-[11px]">Time Slot</th>
+                <th className="text-left py-3 font-bold text-slate-400 uppercase tracking-wider text-[11px]">Patient Name</th>
+                <th className="text-left py-3 font-bold text-slate-400 uppercase tracking-wider text-[11px]">Service</th>
+                <th className="text-left py-3 font-bold text-slate-400 uppercase tracking-wider text-[11px]">Status</th>
+                <th className="text-right py-3 font-bold text-slate-400 uppercase tracking-wider text-[11px]">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredQueue.map(appt => (
+                <tr key={appt.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                  <td className="py-4 font-bold text-slate-700">{appt.time}</td>
+                  <td className="py-4 font-bold text-slate-900">{appt.patient}</td>
+                  <td className="py-4 font-medium text-slate-500">{appt.service} ({appt.duration})</td>
+                  <td className="py-4">
+                    {appt.status === 'scheduled' && <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Scheduled</span>}
+                    {appt.status === 'checked_in' && <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-bold bg-blue-50 text-blue-700 border border-blue-100"><Clock className="w-3 h-3 mr-1"/>Checked In</span>}
+                    {appt.status === 'in_progress' && <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-bold bg-amber-50 text-amber-700 border border-amber-100"><Activity className="w-3 h-3 mr-1 animate-pulse"/>In Progress</span>}
+                    {appt.status === 'completed' && <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-bold bg-green-50 text-green-700 border border-green-100"><CheckCircle2 className="w-3 h-3 mr-1"/>Completed</span>}
+                  </td>
+                  <td className="py-4 text-right space-x-2">
+                    {appt.status === 'scheduled' && <button className="text-[12px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">Check In</button>}
+                    {appt.status === 'checked_in' && <button className="text-[12px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">Start Visit</button>}
+                    {appt.status === 'in_progress' && <button className="text-[12px] font-bold text-green-600 bg-green-50 border border-green-100 px-3 py-1.5 rounded-lg hover:bg-green-100 transition-colors">Complete</button>}
+                    {(appt.status === 'scheduled' || appt.status === 'checked_in') && <button className="text-[12px] font-bold text-slate-500 hover:text-red-600 px-2 py-1.5 transition-colors">Cancel</button>}
+                  </td>
+                </tr>
+              ))}
+              {filteredQueue.length === 0 && (
+                <tr><td colSpan={5} className="py-12 text-center text-slate-400 font-medium">No appointments found for this queue.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DashboardCard>
     </div>
   );
-}
-
-// Temporary icon components
-function UsersIcon(props: any) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
-}
-
-function CheckIcon(props: any) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>;
 }

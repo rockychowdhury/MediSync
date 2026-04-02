@@ -12,6 +12,8 @@ import {
   FileText, BriefcaseMedical
 } from "lucide-react";
 import Image from "next/image";
+import { Toaster } from "@/components/ui/sonner";
+
 
 // Re-map the icons and generic labels based on dashboard.md exact tab lists
 const ADMIN_LINKS = [
@@ -200,9 +202,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {children}
             </div>
           </main>
-
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

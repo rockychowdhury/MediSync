@@ -12,7 +12,7 @@ from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
 
-@router.get("/", response_model=list[ServiceWithSpecialization])
+@router.get("", response_model=list[ServiceWithSpecialization])
 def read_services(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -82,7 +82,7 @@ def read_service(
         data=ServiceWithSpecialization.model_validate(service)
     )
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_service(
     *,
     request: Request,

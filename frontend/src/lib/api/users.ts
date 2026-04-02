@@ -1,42 +1,77 @@
 import apiClient from "./client";
-import type { ApiResponse } from "@/types/api";
+import type { ApiResponse, PaginatedResponse } from "@/types/api";
 import type { User } from "@/types/user";
 
+export { type User };
+
 export interface UserCreatePayload {
-  full_name: string;
+  name: string;
   email: string;
   password?: string;
-  role: string;
+  role_id: number;
 }
 
 export interface UserUpdatePayload {
-  full_name?: string;
+  name?: string;
   email?: string;
-  role?: string;
+  role_id?: number;
+  is_active?: boolean;
 }
 
 export const usersApi = {
-  getUsers: () =>
-    apiClient.get<ApiResponse<User[]>>("/users"),
+  /** Paginated user retrieval with filtering */
+  getUsers: async (params?: any) => {
+    const response = await apiClient.get<PaginatedResponse<User>>("/users", { params });
+    // Map backend 'name' to frontend 'full_name' for compatibility
+    if (response.data.success) {
+      response.data.data = response.data.data.map(u => ({
+        ...u,
+        full_name: u.name,
+        role: (u.role_name?.toLowerCase() || "receptionist") as any
+      }));
+    }
+    return response.data;
+  },
 
-  createUser: (data: UserCreatePayload) =>
-    apiClient.post<ApiResponse<User>>("/users/", data),
+  /** Administrative creation of new staff/clinical accounts */
+  createUser: async (data: UserCreatePayload) => {
+    const response = await apiClient.post<ApiResponse<User>>("/users/", data);
+    return response.data;
+  },
 
-  getUserById: (id: string) =>
-    apiClient.get<ApiResponse<User>>(`/users/${id}`),
+  /** Detailed profile retrieval */
+  getUserById: async (id: string) => {
+    const response = await apiClient.get<ApiResponse<User>>(`/users/${id}`);
+    return response.data;
+  },
 
-  updateUser: (id: string, data: UserUpdatePayload) =>
-    apiClient.put<ApiResponse<User>>(`/users/${id}`, data),
+  /** Update user profile or core security attributes */
+  updateUser: async (id: string, data: UserUpdatePayload) => {
+    const response = await apiClient.put<ApiResponse<User>>(`/users/${id}`, data);
+    return response.data;
+  },
 
-  deleteUser: (id: string) =>
-    apiClient.delete<ApiResponse>(`/users/${id}`),
+  /** Soft-deletion of user credentials */
+  deleteUser: async (id: string) => {
+    const response = await apiClient.delete<ApiResponse>(`/users/${id}`);
+    return response.data;
+  },
 
-  activateUser: (id: string) =>
-    apiClient.patch<ApiResponse<User>>(`/users/${id}/activate`),
+  /** Immediate reinstatement of a suspended account */
+  activateUser: async (id: string) => {
+    const response = await apiClient.patch<ApiResponse>(`/users/${id}/activate`);
+    return response.data;
+  },
 
-  deactivateUser: (id: string) =>
-    apiClient.patch<ApiResponse<User>>(`/users/${id}/deactivate`),
+  /** Immediate suspension of an account (security lockdown) */
+  deactivateUser: async (id: string) => {
+    const response = await apiClient.patch<ApiResponse>(`/users/${id}/deactivate`);
+    return response.data;
+  },
 
-  getUserAudit: (id: string) =>
-    apiClient.get<ApiResponse<any>>(`/users/${id}/audit`),
+  /** Historical audit trail of actions performed by this user */
+  getUserAudit: async (id: string, params?: any) => {
+    const response = await apiClient.get<PaginatedResponse<any>>(`/users/${id}/audit`, { params });
+    return response.data;
+  },
 };

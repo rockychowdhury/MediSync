@@ -13,7 +13,7 @@ from app.schemas.service import ServiceWithSpecialization
 
 router = APIRouter()
 
-@router.get("/", response_model=list[ProviderWithDetails])
+@router.get("", response_model=list[ProviderWithDetails])
 def read_providers(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -33,7 +33,7 @@ def read_providers(
         pagination_data={"total": total, "skip": skip, "limit": limit}
     )
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def promote_to_provider(
     *,
     request: Request,

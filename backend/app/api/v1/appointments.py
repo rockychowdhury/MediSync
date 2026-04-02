@@ -18,7 +18,7 @@ from app.utils.response import APIResponse, ResponseMessages
 router = APIRouter()
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_appointment(
     *,
     request: Request,
@@ -40,32 +40,33 @@ async def create_appointment(
     )
 
 
-@router.get("/")
+@router.get("")
 def read_appointments(
     request: Request,
     db: Session = Depends(get_db),
-    start_date: datetime = Query(...),
-    end_date: datetime = Query(...),
+    start_date: datetime | None = Query(None),
+    end_date: datetime | None = Query(None),
     provider_id: str | None = None,
     patient_id: str | None = None,
     appointment_status: str | None = Query(None, alias="status"),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(10, ge=1, le=500),
     current_user: User = Depends(PermissionChecker(["appointment:list"])),
 ) -> Any:
-    """List appointments within a date range with filtering and pagination."""
-    appointments = crud_appointment.get_appointments_by_date_range(
+    """List appointments with optional filtering and pagination."""
+    appointments, total = crud_appointment.get_appointments_filtered(
         db,
         start_date=start_date,
         end_date=end_date,
         provider_id=provider_id,
+        patient_id=patient_id,
         status=appointment_status,
+        skip=skip,
+        limit=limit,
     )
-    total = len(appointments)
-    paginated = appointments[skip : skip + limit]
     return APIResponse.paginated_success(
         message=ResponseMessages.APPOINTMENT_RETRIEVED,
-        data=[AppointmentResponse.model_validate(a).model_dump(mode="json") for a in paginated],
+        data=[AppointmentResponse.model_validate(a).model_dump(mode="json") for a in appointments],
         pagination_data={"total": total, "skip": skip, "limit": limit},
     )
 

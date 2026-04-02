@@ -12,7 +12,7 @@ from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
 
-@router.get("/", response_model=list[PatientResponse])
+@router.get("", response_model=list[PatientResponse])
 def read_patients(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -31,7 +31,7 @@ def read_patients(
         pagination_data={"total": total, "skip": skip, "limit": limit}
     )
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_patient(
     *,
     request: Request,

@@ -44,24 +44,38 @@ class CRUDAppointment(CRUDBase[Appointment, AppointmentCreate, AppointmentUpdate
             .all()
         )
 
-    def get_appointments_by_date_range(
+    def get_appointments_filtered(
         self,
         db: Session,
         *,
-        start_date: datetime,
-        end_date: datetime,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
         provider_id: Optional[str] = None,
+        patient_id: Optional[str] = None,
         status: Optional[str] = None,
-    ) -> list[Appointment]:
-        query = db.query(Appointment).filter(
-            Appointment.appointment_start >= start_date,
-            Appointment.appointment_start <= end_date,
-        )
+        skip: int = 0,
+        limit: int = 100,
+    ) -> tuple[list[Appointment], int]:
+        query = db.query(Appointment)
+        if start_date:
+            query = query.filter(Appointment.appointment_start >= start_date)
+        if end_date:
+            query = query.filter(Appointment.appointment_start <= end_date)
         if provider_id:
             query = query.filter(Appointment.provider_id == provider_id)
+        if patient_id:
+            query = query.filter(Appointment.patient_id == patient_id)
         if status:
             query = query.filter(Appointment.status == status)
-        return query.order_by(Appointment.appointment_start.asc()).all()
+            
+        total = query.count()
+        appointments = (
+            query.order_by(Appointment.appointment_start.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        return appointments, total
 
     def get_provider_queue(
         self, db: Session, *, provider_id: str, target_date: date

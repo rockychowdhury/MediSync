@@ -61,8 +61,8 @@ export default function AuditLogsPage() {
     const fetchUsers = async () => {
       try {
         const res = await usersApi.getUsers();
-        if (res.data.success) {
-          setUsers(res.data.data);
+        if (res.success) {
+          setUsers(res.data);
         }
       } catch (error) {
         console.error("Failed to fetch user list for audit filters", error);

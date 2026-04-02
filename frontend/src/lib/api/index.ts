@@ -1,8 +1,13 @@
-/* API module barrel re-exports */
 export { default as apiClient } from "./client";
-export { authApi } from "./auth";
-export { dashboardApi } from "./dashboard";
-export { appointmentsApi } from "./appointments";
-export { providersApi } from "./providers";
-export { usersApi } from "./users";
-export { auditApi } from "./audit";
+export * from "./auth";
+export * from "./users";
+export * from "./dashboard";
+export * from "./appointments";
+export * from "./providers";
+export * from "./services";
+export * from "./patients";
+export * from "./audit";
+export * from "./availability";
+export * from "./specializations";
+export * from "./timeOff";
+export * from "./rbac";

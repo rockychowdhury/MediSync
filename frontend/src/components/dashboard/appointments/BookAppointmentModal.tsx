@@ -19,7 +19,11 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { appointmentsApi, patientsApi, servicesApi, providersApi } from "@/lib/api";
+import { appointmentsApi } from "@/lib/api/appointments";
+import { patientsApi } from "@/lib/api/patients";
+import { servicesApi } from "@/lib/api/services";
+import { providersApi } from "@/lib/api/providers";
+
 import { Loader2, Calendar as CalendarIcon, Clock, AlertCircle } from "lucide-react";
 import { format, addHours, startOfToday } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -29,6 +33,7 @@ interface BookAppointmentModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialDate?: Date;
+  prefilledPatientId?: string | null;
 }
 
 export function BookAppointmentModal({
@@ -36,6 +41,7 @@ export function BookAppointmentModal({
   onClose,
   onSuccess,
   initialDate = new Date(),
+  prefilledPatientId,
 }: BookAppointmentModalProps) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -75,8 +81,13 @@ export function BookAppointmentModal({
         }
       };
       loadInitialData();
+      // Auto-select prefilled patient when redirected from Patients page
+      if (prefilledPatientId) {
+        setFormData(prev => ({ ...prev, patient_id: prefilledPatientId }));
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, prefilledPatientId]);
+
 
   const checkAvailability = async (providerId: string, time: string) => {
     if (!providerId || !time) return;

@@ -1,3 +1,7 @@
+/**
+ * Centralized API barrel export for all MediSync API clients.
+ * Import from here or directly from the source file.
+ */
 export { default as apiClient } from "./client";
 export * from "./auth";
 export * from "./users";

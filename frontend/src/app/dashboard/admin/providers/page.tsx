@@ -4,12 +4,9 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { PageHeader } from "@/components/dashboard/ui/PageHeader";
-import { 
-  providersApi, 
-  servicesApi, 
-  specializationsApi,
-  availabilityApi 
-} from "@/lib/api";
+import { providersApi } from "@/lib/api/providers";
+import { servicesApi } from "@/lib/api/services";
+import { specializationsApi } from "@/lib/api/specializations";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { 
   Stethoscope, 
@@ -43,8 +40,13 @@ export default function ProvidersServicesPage() {
   const [specializations, setSpecializations] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   
+  // Search state for each tab
+  const [providerSearch, setProviderSearch] = useState("");
+  const [serviceSearch, setServiceSearch] = useState("");
+
   // UI State
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
+
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
@@ -65,6 +67,7 @@ export default function ProvidersServicesPage() {
       if (servsRes.success) setServices(servsRes.data || []);
       if (specsRes.success) setSpecializations(specsRes.data || []);
       if (catsRes.success) setCategories(catsRes.data || []);
+
     } catch (error) {
       console.error("Failed to fetch workforce data", error);
     } finally {
@@ -96,6 +99,21 @@ export default function ProvidersServicesPage() {
     setSelectedProviderId(id);
     setIsDetailOpen(true);
   };
+
+  // Derived filtered lists (client-side for instant UX; data already loaded)
+  const filteredProviders = providers.filter(p => {
+    if (!providerSearch) return true;
+    const name = (p.user?.name || p.user?.full_name || "").toLowerCase();
+    const spec = (p.specialization?.name || "").toLowerCase();
+    return name.includes(providerSearch.toLowerCase()) || spec.includes(providerSearch.toLowerCase());
+  });
+
+  const filteredServices = services.filter(s => {
+    if (!serviceSearch) return true;
+    const name = (s.name || "").toLowerCase();
+    const cat = (s.category || "").toLowerCase();
+    return name.includes(serviceSearch.toLowerCase()) || cat.includes(serviceSearch.toLowerCase());
+  });
 
   return (
     <div className="h-full flex flex-col animate-in fade-in duration-700 pb-6 overflow-hidden">
@@ -142,6 +160,8 @@ export default function ProvidersServicesPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                     <Input 
                       placeholder="Search clinical staff..." 
+                      value={providerSearch}
+                      onChange={e => setProviderSearch(e.target.value)}
                       className="pl-10 h-11 border-slate-200 rounded-2xl bg-white shadow-sm focus:shadow-md transition-all font-semibold"
                     />
                   </div>
@@ -155,9 +175,10 @@ export default function ProvidersServicesPage() {
                </div>
                
                <ProviderGrid 
-                providers={providers}
+                providers={filteredProviders}
                 onProviderClick={openProviderDetails}
                />
+
             </div>
           ) : (
             <div className="space-y-8 animate-in slide-in-from-left-4 duration-500 pb-10">
@@ -166,6 +187,8 @@ export default function ProvidersServicesPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                     <Input 
                       placeholder="Search clinical services..." 
+                      value={serviceSearch}
+                      onChange={e => setServiceSearch(e.target.value)}
                       className="pl-10 h-11 border-slate-200 rounded-2xl bg-white shadow-sm focus:shadow-md transition-all font-semibold"
                     />
                   </div>
@@ -195,10 +218,11 @@ export default function ProvidersServicesPage() {
                )}
                
                <ServiceTable 
-                services={services}
+                services={filteredServices}
                 categories={categories}
                 onUpdate={fetchData}
                />
+
             </div>
           )}
         </div>

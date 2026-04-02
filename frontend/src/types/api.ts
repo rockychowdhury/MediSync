@@ -6,18 +6,17 @@ export interface ApiResponse<T = unknown> {
   timestamp?: string;
 }
 
-/** Paginated API response */
+/** Paginated API response — matches backend APIResponse.paginated_success shape */
 export interface PaginatedResponse<T = unknown> {
   success: boolean;
   message: string;
   data: T[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    total_pages: number;
-    has_next: boolean;
-    has_prev: boolean;
+  meta: {
+    pagination: {
+      total: number;
+      skip: number;
+      limit: number;
+    };
   };
 }
 

@@ -108,6 +108,8 @@ export default function AuditLogsPage() {
     setFilters(prev => ({ ...prev, [key]: value || undefined, skip: 0 }));
   };
 
+
+
   const clearFilters = () => {
     setFilters({ skip: 0, limit: 50 });
   };

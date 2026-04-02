@@ -20,7 +20,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { availabilityApi } from "@/lib/api";
+import { availabilityApi } from "@/lib/api/availability";
+
 import { Badge } from "@/components/ui/badge";
 
 interface AvailabilityGridProps {

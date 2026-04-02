@@ -43,11 +43,15 @@ export default function UsersAndRolesPage() {
         search 
       });
       if (res.success) {
-         setUsers(res.data);
-         setPagination(p => ({ ...p, total: res.pagination?.total || 0, skip }));
+         setUsers(res.data || []);
+         if (res.meta?.pagination) {
+           const { total, skip: s, limit } = res.meta.pagination;
+           setPagination(p => ({ ...p, total, skip: s, limit }));
+         }
       }
     } catch (error) {
       console.error("Failed to load users", error);
+      toast.error("Failed to load user registry");
     } finally {
       setLoading(false);
     }
@@ -67,10 +71,15 @@ export default function UsersAndRolesPage() {
     }
   }, []);
 
+  // Always load both on mount so CreateUserModal has roles available immediately
+  useEffect(() => {
+    loadRoles();
+  }, [loadRoles]);
+
   useEffect(() => {
     if (activeTab === "users") loadUsers(0);
-    else if (activeTab === "roles") loadRoles();
-  }, [activeTab, loadUsers, loadRoles]);
+  }, [activeTab, loadUsers]);
+
 
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-700 bg-slate-50/30 min-h-screen">
@@ -161,8 +170,10 @@ export default function UsersAndRolesPage() {
                 skip={pagination.skip}
                 limit={pagination.limit}
                 onPageChange={(skip: number) => loadUsers(skip)}
-                onUpdate={loadUsers}
+                onUpdate={() => loadUsers(pagination.skip)}
+                roles={roles}
                />
+
             )}
          </TabsContent>
 

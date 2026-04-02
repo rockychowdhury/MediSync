@@ -20,8 +20,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { usersApi, User } from "@/lib/api";
+import { usersApi, User } from "@/lib/api/users";
 import { UserAuditDrawer } from "./UserAuditDrawer";
+import { EditUserModal } from "./EditUserModal";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +41,9 @@ interface UserTableProps {
   limit: number;
   onPageChange: (skip: number) => void;
   onUpdate: () => void;
+  roles: { id: number; name: string }[];
 }
+
 
 export function UserTable({
   users,
@@ -49,9 +53,18 @@ export function UserTable({
   limit,
   onPageChange,
   onUpdate,
+  roles,
 }: UserTableProps) {
+
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isAuditDrawerOpen, setIsAuditDrawerOpen] = useState(false);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleEditAction = (user: User) => {
+    setEditUser(user);
+    setIsEditModalOpen(true);
+  };
 
   const toggleStatus = async (user: User) => {
     try {
@@ -137,10 +150,14 @@ export function UserTable({
                       <DropdownMenuContent align="end" className="w-56 rounded-2xl border-slate-200 shadow-2xl p-2 bg-white">
                         <DropdownMenuLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 py-2 leading-tight">Administrative Controls</DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-slate-50" />
-                        <DropdownMenuItem className="rounded-xl px-3 py-2.5 font-bold text-xs text-slate-700 hover:bg-slate-50 cursor-pointer flex items-center gap-3">
+                        <DropdownMenuItem 
+                          onClick={() => handleEditAction(user)}
+                          className="rounded-xl px-3 py-2.5 font-bold text-xs text-slate-700 hover:bg-slate-50 cursor-pointer flex items-center gap-3"
+                        >
                            <Edit3 className="w-3.5 h-3.5 text-blue-500" />
                            Modify Identity
                         </DropdownMenuItem>
+
                         <DropdownMenuItem 
                           onClick={() => handleAuditAction(user.id)}
                           className="rounded-xl px-3 py-2.5 font-bold text-xs text-slate-700 hover:bg-slate-50 cursor-pointer flex items-center gap-3"
@@ -217,6 +234,15 @@ export function UserTable({
         isOpen={isAuditDrawerOpen}
         onClose={() => setIsAuditDrawerOpen(false)}
       />
+
+      <EditUserModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        user={editUser}
+        roles={roles}
+        onSuccess={onUpdate}
+      />
     </div>
   );
 }
+

@@ -23,7 +23,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { servicesApi } from "@/lib/api";
+import { servicesApi } from "@/lib/api/services";
+
 
 interface ServiceTableProps {
   services: any[];

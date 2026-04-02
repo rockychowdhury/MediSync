@@ -6,8 +6,13 @@ import { useSearchParams } from "next/navigation";
 import type { RootState } from "@/store";
 import { PageHeader } from "@/components/dashboard/ui/PageHeader";
 import { AppointmentToolbar } from "@/components/dashboard/appointments/AppointmentToolbar";
-import { appointmentsApi, providersApi, servicesApi } from "@/lib/api";
+import { appointmentsApi } from "@/lib/api/appointments";
+import { providersApi } from "@/lib/api/providers";
+import { servicesApi } from "@/lib/api/services";
+
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { toast } from "sonner";
+
 
 import { AppointmentListView } from "@/components/dashboard/appointments/AppointmentListView";
 import { CalendarView } from "@/components/dashboard/appointments/CalendarView";
@@ -63,14 +68,16 @@ export default function AppointmentsPage() {
 
       if (apptsRes.success) {
         setAppointments(apptsRes.data || []);
-        if (apptsRes.pagination_data) {
-          setPagination(apptsRes.pagination_data);
+        if (apptsRes.meta?.pagination) {
+          const { total, skip, limit } = apptsRes.meta.pagination;
+          setPagination({ total, skip, limit });
         }
       }
       if (provsRes.success) setProviders(provsRes.data || []);
       if (servsRes.success) setServices(servsRes.data || []);
     } catch (error) {
       console.error("Failed to fetch appointments data", error);
+      toast.error("Failed to load appointments", { description: "Check your connection and try again." });
     } finally {
       setLoading(false);
     }
@@ -116,11 +123,14 @@ export default function AppointmentsPage() {
       const res = await appointmentsApi.updateStatus(id, status);
       if (res.success) {
         fetchData();
+        toast.success("Status updated", { description: `Appointment set to ${status}.` });
       }
     } catch (error) {
       console.error(`Failed to update appointment ${id} to ${status}`, error);
+      toast.error("Failed to update status");
     }
   };
+
 
   return (
     <div className="h-full flex flex-col animate-in fade-in duration-700 pb-4">
@@ -186,9 +196,14 @@ export default function AppointmentsPage() {
       {/* Book Appointment Modal */}
       <BookAppointmentModal 
         isOpen={isBookModalOpen}
-        onClose={() => setIsBookModalOpen(false)}
+        onClose={() => {
+          setIsBookModalOpen(false);
+          setPrefilledPatientId(null);
+        }}
         onSuccess={fetchData}
+        prefilledPatientId={prefilledPatientId}
       />
+
     </div>
   );
 }

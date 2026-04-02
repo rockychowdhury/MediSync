@@ -22,14 +22,6 @@ export const usersApi = {
   /** Paginated user retrieval with filtering */
   getUsers: async (params?: any) => {
     const response = await apiClient.get<PaginatedResponse<User>>("/users", { params });
-    // Map backend 'name' to frontend 'full_name' for compatibility
-    if (response.data.success) {
-      response.data.data = response.data.data.map(u => ({
-        ...u,
-        full_name: u.name,
-        role: (u.role_name?.toLowerCase() || "receptionist") as any
-      }));
-    }
     return response.data;
   },
 

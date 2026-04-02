@@ -9,9 +9,12 @@ import { PatientToolbar } from "@/components/dashboard/patients/PatientToolbar";
 import { PatientTable } from "@/components/dashboard/patients/PatientTable";
 import { CreatePatientModal } from "@/components/dashboard/patients/CreatePatientModal";
 import { PatientDetailDrawer } from "@/components/dashboard/patients/PatientDetailDrawer";
-import { patientsApi } from "@/lib/api";
+import { patientsApi } from "@/lib/api/patients";
+
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { UserCheck } from "lucide-react";
+import { toast } from "sonner";
+
 
 export default function PatientsPage() {
   const router = useRouter();
@@ -44,12 +47,14 @@ export default function PatientsPage() {
       const res = await patientsApi.getPatients(filters);
       if (res.success) {
         setPatients(res.data || []);
-        if (res.pagination_data) {
-          setPagination(res.pagination_data);
+        if (res.meta?.pagination) {
+          const { total, skip, limit } = res.meta.pagination;
+          setPagination({ total, skip, limit });
         }
       }
     } catch (error) {
       console.error("Failed to fetch patients data", error);
+      toast.error("Failed to load patient records");
     } finally {
       setLoading(false);
     }

@@ -144,22 +144,31 @@ class PermissionChecker:
 
 async def get_current_user_ws(
     websocket: WebSocket,
-) -> dict:
+) -> dict | None:
     """
-    Authenticates a WebSocket connection using cookies.
+    Authenticates a WebSocket connection using cookies or a 'token' query parameter.
     Validates the JWT signature only — no DB hit required.
-    This prevents WebSocket connections from consuming DB pool slots.
     """
+    # Check cookies first
     access_token = websocket.cookies.get(JWTAuthManager.ACCESS_COOKIE_NAME)
     
+    # Fallback to query parameter (for environments where cookies are stripped in WS handshakes)
     if not access_token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        access_token = websocket.query_params.get("token")
+    
+    # Log state for debugging
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    if not access_token:
+        logger.warning(f"WebSocket auth failed: No token found in cookies or query params.")
+        return None
         
     payload = JWTAuthManager.validate_token(access_token, "access")
     if not payload:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        logger.warning("WebSocket auth failed: Invalid or expired token")
+        return None
     
-    # Return the JWT payload directly — no DB lookup needed
     return payload
+
+

@@ -59,7 +59,7 @@ export function RoleManager({
   }, [roles, selectedRoleId]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-280px)] animate-in slide-in-from-bottom-4 duration-700">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 animate-in fade-in duration-500">
       {/* Role Sidebar */}
       <div className="lg:col-span-3 flex flex-col gap-4">
         <div className="px-1">
@@ -69,7 +69,7 @@ export function RoleManager({
            </h3>
         </div>
         
-        <ScrollArea className="flex-1 bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden p-2">
+        <ScrollArea className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-2">
            <div className="space-y-1">
               {roles.map((role) => (
                 <button
@@ -102,7 +102,7 @@ export function RoleManager({
            </div>
         </ScrollArea>
 
-        <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100/50 space-y-3 relative overflow-hidden group">
+        <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50 space-y-2 relative overflow-hidden group">
            <Zap className="absolute -right-2 -bottom-2 w-16 h-16 text-blue-100 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-700" />
            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-relaxed relative">
               System roles define the primary permission boundary of the workforce. Security policy updates are applied in real-time across all active sessions.
@@ -111,7 +111,7 @@ export function RoleManager({
       </div>
 
       {/* Permission Content Area */}
-      <div className="lg:col-span-9 flex flex-col bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden shadow-slate-200/50">
+      <div className="lg:col-span-9 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {!selectedRole ? (
            <div className="flex-1 flex flex-col items-center justify-center space-y-4">
               <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
@@ -119,15 +119,15 @@ export function RoleManager({
            </div>
         ) : (
            <div className="flex flex-col h-full">
-              <header className="p-8 border-b border-slate-50 bg-slate-50/30">
-                 <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                       <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-100">
-                          <Lock className="w-6 h-6" />
+              <header className="px-6 py-4 border-b border-slate-50 bg-slate-50/30">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-100">
+                          <Lock className="w-5 h-5" />
                        </div>
                        <div>
-                          <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-none uppercase">{selectedRole.name} Matrix</h2>
-                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{selectedRole.description || "Policy configuration ledger for active operational role."}</div>
+                          <h2 className="text-sm font-black text-slate-800 tracking-tight leading-none uppercase">{selectedRole.name} Matrix</h2>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{selectedRole.description || "Policy configuration ledger for active operational role."}</div>
                        </div>
                     </div>
 

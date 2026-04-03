@@ -25,12 +25,14 @@ export function AuthObserver({ children }: { children: React.ReactNode }) {
         
         // If successful, the HTTPOnly cookies hold a valid session.
         if (response.data?.data) {
+          const { token } = response.data.data;
           const userData = {
             ...response.data.data,
             role: response.data.data.role_name || "receptionist",
           };
           
-          dispatch(setCredentials({ user: userData }));
+          dispatch(setCredentials({ user: userData, token }));
+
           
           // If on a public route but authenticated, redirect to dashboard based on role
           if (PUBLIC_ROUTES.includes(pathname)) {

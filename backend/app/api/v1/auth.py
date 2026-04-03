@@ -94,10 +94,12 @@ def login(
         data={
             "user_id": user.id,
             "role_id": user.role_id,
-            "role_name": user.role.name if user.role else None
+            "role_name": user.role.name if user.role else None,
+            "token": access_token
         }
     )
     JWTAuthManager.set_auth_cookies(response_obj, access_token, refresh_token)
+
     return response_obj
 
 @router.post("/logout")

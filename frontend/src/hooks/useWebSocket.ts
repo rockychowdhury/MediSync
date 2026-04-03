@@ -11,9 +11,11 @@ interface UseWebSocketOptions {
   channel: string;
   onMessage?: (message: WebSocketMessage) => void;
   enabled?: boolean;
+  token?: string | null;
 }
 
-export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocketOptions) {
+export function useWebSocket({ channel, onMessage, enabled = true, token = null }: UseWebSocketOptions) {
+
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,7 +46,11 @@ export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocke
 
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/api/v1/ws/${channel}`;
+      let wsUrl = `${protocol}//${host}/api/v1/ws/${channel}`;
+
+      if (token) {
+        wsUrl += `?token=${token}`;
+      }
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -60,24 +66,27 @@ export function useWebSocket({ channel, onMessage, enabled = true }: UseWebSocke
           const message: WebSocketMessage = JSON.parse(event.data);
           onMessageRef.current?.(message);
         } catch (error) {
-          console.error("[WebSocket] Failed to parse message:", error);
+          console.error(`[WebSocket] Failed to parse message from ${channel}:`, error);
         }
       };
 
       ws.onclose = (event) => {
         if (unmounted) return;
         setIsConnected(false);
+        console.log(`[WebSocket] Closed: ${channel} (Code: ${event.code}, Reason: ${event.reason || "None"})`);
 
-        // Only auto-reconnect if not intentionally closed
-        if (event.code !== 1000) {
+        // Only auto-reconnect if not intentionally closed by us or disabled
+        if (event.code !== 1000 && enabled) {
+          console.log(`[WebSocket] Attempting reconnection to ${channel} in 5s...`);
           reconnectTimeoutRef.current = setTimeout(connect, 5000);
         }
       };
 
-      ws.onerror = () => {
-        // onclose will fire after this, which handles reconnection
+      ws.onerror = (error) => {
+        console.error(`[WebSocket] Error on ${channel}:`, error);
       };
     }
+
 
     connect();
 

@@ -17,17 +17,29 @@ class PasswordChangeRequest(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=72)
 
 @router.get("/me")
-def read_current_user(current_user: User = Depends(get_current_user)) -> Any:
+def read_current_user(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+) -> Any:
     """Fetch the currently authenticated user's profile."""
     from app.schemas.user import UserResponse
+    from app.core.auth import JWTAuthManager
+    
     user_data = UserResponse.model_validate(current_user)
     if not user_data.role_name and current_user.role:
         user_data.role_name = current_user.role.name
         
+    # Get the token from cookies to pass back to the frontend (for WebSocket fallback)
+    token = request.cookies.get(JWTAuthManager.ACCESS_COOKIE_NAME)
+    
+    data = user_data.model_dump()
+    data["token"] = token
+        
     return APIResponse.success(
         message=ResponseMessages.RETRIEVED_SUCCESS,
-        data=user_data.model_dump()
+        data=data
     )
+
 
 @router.put("/me")
 def update_current_user(

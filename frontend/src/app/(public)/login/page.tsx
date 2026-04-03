@@ -36,12 +36,13 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      await authApi.login(data);
+      const response = await authApi.login(data);
+      const { token } = response.data.data;
       const meResponse = await authApi.me();
       if (meResponse.data?.data) {
         let role = meResponse.data.data.role_name || "receptionist";
         const userData = { ...meResponse.data.data, role };
-        dispatch(setCredentials({ user: userData }));
+        dispatch(setCredentials({ user: userData, token }));
 
         if (role === "admin") router.replace("/dashboard/admin");
         else if (role === "provider") router.replace("/dashboard/provider");

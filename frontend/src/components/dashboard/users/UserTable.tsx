@@ -210,106 +210,110 @@ export function UserTable({
                 </td>
                 <td className="px-8 py-2.5 text-right">
                    <div className="flex items-center justify-end gap-1.5 focus-within:z-10 relative">
-                     {/* Identity Insight */}
-                     <TooltipProvider>
-                       <Tooltip>
-                         <TooltipTrigger>
-                           <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setIsDetailsOpen(true);
-                            }}
-                            className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
-                           >
-                             <Eye className="w-3.5 h-3.5" />
-                           </Button>
-                         </TooltipTrigger>
-                         <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Identity Insight</TooltipContent>
-                       </Tooltip>
-                     </TooltipProvider>
+                    {/* Identity Insight */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger 
+                          render={
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                          }
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setIsDetailsOpen(true);
+                          }}
+                        />
+                        <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Identity Insight</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
-                     {/* Modify Identity */}
-                     <TooltipProvider>
-                       <Tooltip>
-                         <TooltipTrigger>
-                           <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleEditAction(user)}
-                            className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100/50 transition-all"
-                           >
-                             <Edit3 className="w-3.5 h-3.5" />
-                           </Button>
-                         </TooltipTrigger>
-                         <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Modify Profile</TooltipContent>
-                       </Tooltip>
-                     </TooltipProvider>
+                    {/* Modify Identity */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger 
+                          render={
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100/50 transition-all"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </Button>
+                          }
+                          onClick={() => handleEditAction(user)}
+                        />
+                        <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Modify Profile</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
-                     {/* Security Audit */}
-                     <TooltipProvider>
-                       <Tooltip>
-                         <TooltipTrigger>
-                           <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleAuditAction(user.id)}
-                            className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50/50 transition-all"
-                           >
-                             <History className="w-3.5 h-3.5" />
-                           </Button>
-                         </TooltipTrigger>
-                         <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Security Audit</TooltipContent>
-                       </Tooltip>
-                     </TooltipProvider>
+                    {/* Security Audit */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger 
+                          render={
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all font-black text-xs"
+                            >
+                              <ShieldAlert className="w-3.5 h-3.5" />
+                            </Button>
+                          }
+                          onClick={() => handleAuditAction(user.id)}
+                        />
+                        <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Security Audit</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
                      <div className="h-4 w-px bg-slate-100 mx-0.5" />
 
-                     {/* Lifecycle Toggle */}
-                     <TooltipProvider>
-                       <Tooltip>
-                         <TooltipTrigger>
-                           <Button 
-                            variant="ghost" 
-                            size="sm"
-                            disabled={isActionLoading}
-                            onClick={() => toggleStatus(user)}
-                            className={cn(
-                              "h-8 w-8 p-0 rounded-lg transition-all",
-                              user.is_active 
-                                ? "text-slate-400 hover:text-amber-600 hover:bg-amber-50" 
-                                : "text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50"
-                            )}
-                           >
-                             {user.is_active ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                           </Button>
-                         </TooltipTrigger>
-                         <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">
-                            {user.is_active ? "Lock Protocol" : "Verify & Activate"}
-                         </TooltipContent>
-                       </Tooltip>
-                     </TooltipProvider>
+                    {/* Lifecycle Toggle */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger 
+                          render={
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className={`h-8 w-8 p-0 rounded-lg transition-all ${user.is_active ? "text-slate-400 hover:text-orange-600 hover:bg-orange-50/50" : "text-green-500 hover:text-green-700 hover:bg-green-50"}`}
+                            >
+                              {user.is_active ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                            </Button>
+                          }
+                          onClick={() => toggleStatus(user)}
+                        />
+                        <TooltipContent className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">
+                          {user.is_active ? "Lock Identity" : "Restore Identity"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
-                     {/* Purge Identity */}
-                     <TooltipProvider>
-                       <Tooltip>
-                         <TooltipTrigger>
-                           <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              setDeleteUserId(user.id);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            className="h-8 w-8 p-0 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all"
-                           >
-                             <Trash2 className="w-3.5 h-3.5" />
-                           </Button>
-                         </TooltipTrigger>
-                         <TooltipContent className="bg-rose-600 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Purge Identity</TooltipContent>
-                       </Tooltip>
-                     </TooltipProvider>
+                    {/* Purge Identity */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger 
+                          render={
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          }
+                          onClick={() => {
+                            setDeleteUserId(user.id);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        />
+                        <TooltipContent className="bg-rose-600 text-white border-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5">Purge Identity</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                    </div>
                 </td>
               </tr>

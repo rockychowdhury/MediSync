@@ -102,7 +102,7 @@ class UserService:
         return user
 
     @staticmethod
-    async def activate_user(db: Session, *, db_obj: User, actor_id: str, ip_address: str | None = None) -> User:
+    def activate_user(db: Session, *, db_obj: User, actor_id: str, ip_address: str | None = None) -> User:
         user = crud.user.update(db, db_obj=db_obj, obj_in={"is_active": True, "deleted_at": None})
         UserService.log_activity(
             db,
@@ -112,7 +112,6 @@ class UserService:
             description=f"Activated/Restored user {user.email}",
             ip_address=ip_address
         )
-        await EmailService.send_account_activation_email(email=user.email, name=user.name)
         return user
 
     @staticmethod

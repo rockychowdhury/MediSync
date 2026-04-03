@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Depends, Query, status, Request
+from fastapi import APIRouter, Depends, Query, status, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app import crud
@@ -8,6 +8,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from app.schemas.activity_log import ActivityLogListResponse
 from app.services.user_service import UserService
+from app.services.email_service import EmailService
 from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
@@ -142,11 +143,12 @@ def delete_user(
     return APIResponse.success(message=ResponseMessages.DELETED_SUCCESS)
 
 @router.patch("/{id}/activate")
-async def activate_user(
+def activate_user(
     *,
     request: Request,
     db: Session = Depends(get_db),
     id: str,
+    background_tasks: BackgroundTasks,
     current_admin: User = Depends(get_current_active_admin),
 ) -> Any:
     """Re-activate a user account."""
@@ -156,11 +158,18 @@ async def activate_user(
             message=ResponseMessages.USER_NOT_FOUND,
             status_code=status.HTTP_404_NOT_FOUND,
         )
-    updated_user = await UserService.activate_user(
+    updated_user = UserService.activate_user(
         db, 
         db_obj=user, 
         actor_id=current_admin.id,
         ip_address=request.client.host if request.client else None
+    )
+    
+    # Send activation email in background to prevent blocking
+    background_tasks.add_task(
+        EmailService.send_account_activation_email, 
+        email=updated_user.email, 
+        name=updated_user.name
     )
     return APIResponse.success(message="Account activated successfully")
 

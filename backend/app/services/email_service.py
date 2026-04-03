@@ -44,7 +44,7 @@ class EmailService:
         return str(file_path)
 
     @classmethod
-    async def send_email(cls, subject: str, recipients: List[str], body: str):
+    def send_email(cls, subject: str, recipients: List[str], body: str):
         """Send an email based on the current environment."""
         if settings.DEBUG:
             print(f"[DEBUG EMAIL] Saving email to file: {subject}")
@@ -77,7 +77,7 @@ class EmailService:
             print(f"[ERROR] Failed to send email: {e}")
 
     @classmethod
-    async def send_password_reset_email(cls, email: str, token: str):
+    def send_password_reset_email(cls, email: str, token: str):
         """Send a password reset link to a user."""
         subject = "MediSync - Password Reset Request"
         # In a real app, this would be a link to your frontend
@@ -90,10 +90,10 @@ class EmailService:
         <p><a href="{reset_link}" style="display:inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
         <p>If you didn't request this, you can safely ignore this email.</p>
         """
-        await cls.send_email(subject, [email], body)
+        cls.send_email(subject, [email], body)
 
     @classmethod
-    async def send_account_activation_email(cls, email: str, name: str):
+    def send_account_activation_email(cls, email: str, name: str):
         """Notify a user that their account has been activated."""
         subject = "MediSync - Account Activated"
         body = f"""
@@ -102,4 +102,4 @@ class EmailService:
         <p>You can now login to your portal using your registered email and password.</p>
         <p><a href="http://localhost:3000/login" style="display:inline-block; padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">Login Now</a></p>
         """
-        await cls.send_email(subject, [email], body)
+        cls.send_email(subject, [email], body)

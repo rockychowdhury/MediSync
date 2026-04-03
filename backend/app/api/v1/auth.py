@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -125,9 +125,10 @@ def logout(
 
 
 @router.post("/forgot-password")
-async def forgot_password(
+def forgot_password(
     request: Request,
     req: ForgotPasswordRequest, 
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ) -> Any:
     """Send password reset link to user's email."""
@@ -143,7 +144,7 @@ async def forgot_password(
     # Store token in Redis (5 min TTL)
     RedisTokenService.store_reset_token(token=token, user_id=user.id)
     
-    await EmailService.send_password_reset_email(email=user.email, token=token)
+    background_tasks.add_task(EmailService.send_password_reset_email, email=user.email, token=token)
     
     UserService.log_activity(
         db,

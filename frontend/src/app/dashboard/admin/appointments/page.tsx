@@ -5,203 +5,247 @@ import { useSelector } from "react-redux";
 import { useSearchParams } from "next/navigation";
 import type { RootState } from "@/store";
 import { PageHeader } from "@/components/dashboard/ui/PageHeader";
-import { AppointmentToolbar } from "@/components/dashboard/appointments/AppointmentToolbar";
-import { appointmentsApi } from "@/lib/api/appointments";
+import { toast } from "sonner";
+
+// New Core Hooks
+import { useAppointments } from "./hooks/useAppointments";
+import { useAppointmentActions } from "./hooks/useAppointmentActions";
+import { useAppointmentWebSocket } from "./hooks/useAppointmentWebSocket";
+
+// New UI Components
+import { KPICommandBar } from "./components/KPICommandBar";
+import { FilterToolbar } from "./components/FilterToolbar";
+
+// New Views
+import { ListView } from "./components/views/ListView";
+import { CalendarView } from "./components/views/CalendarView";
+import { QueueBoard } from "./components/views/QueueBoard";
+
+// New Dialogs & Drawers
+import { AppointmentDetailDrawer } from "./components/AppointmentDetailDrawer";
+import { BookAppointmentModal } from "./components/dialogs/BookAppointmentModal";
+import { CancelDialog } from "./components/dialogs/CancelDialog";
+import { RescheduleDialog } from "./components/dialogs/RescheduleDialog";
+
+// Data APIs for metadata
 import { providersApi } from "@/lib/api/providers";
 import { servicesApi } from "@/lib/api/services";
 
-import { useWebSocket } from "@/hooks/useWebSocket";
-import { toast } from "sonner";
-
-
-import { AppointmentListView } from "@/components/dashboard/appointments/AppointmentListView";
-import { CalendarView } from "@/components/dashboard/appointments/CalendarView";
-import { AppointmentDetailDrawer } from "@/components/dashboard/appointments/AppointmentDetailDrawer";
-import { BookAppointmentModal } from "@/components/dashboard/appointments/BookAppointmentModal";
-
 export default function AppointmentsPage() {
   const searchParams = useSearchParams();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   
-  const [view, setView] = useState<"calendar" | "list">("list");
-  const [appointments, setAppointments] = useState<any[]>([]);
+  // View State
+  const [activeView, setActiveView] = useState<"list" | "calendar" | "queue">("list");
+  
+  // Data State via Hook
+  const { 
+    appointments, 
+    stats, 
+    loading, 
+    filters, 
+    pagination, 
+    updateFilters, 
+    handlePageChange, 
+    refresh 
+  } = useAppointments();
+
+  const { bulkUpdateStatus } = useAppointmentActions(refresh);
+
+  // Metadata State
   const [providers, setProviders] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
-  
-  const [loading, setLoading] = useState(true);
+
+  // Dialog/Drawer State
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
-  const [prefilledPatientId, setPrefilledPatientId] = useState<string | null>(null);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
 
+  // Initial Metadata Fetch
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const [pRes, sRes] = await Promise.all([
+          providersApi.getProviders(),
+          servicesApi.getServices()
+        ]);
+        if (pRes.success) setProviders(pRes.data || []);
+        if (sRes.success) setServices(sRes.data || []);
+      } catch (err) {
+        console.error("Metadata fetch failed", err);
+      }
+    };
+    if (isAuthenticated) fetchMetadata();
+  }, [isAuthenticated]);
+
+  // Handle URL Entry for specific patients
   useEffect(() => {
     const patientId = searchParams.get("patient_id");
     if (patientId) {
-      setPrefilledPatientId(patientId);
       setIsBookModalOpen(true);
-      // Optional: Clear params after reading to avoid re-opening on refresh
+      // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [searchParams]);
 
-  const [filters, setFilters] = useState<any>({
-    skip: 0,
-    limit: 10,
-    // Note: start_date and end_date are now optional
-  });
-
-  const [pagination, setPagination] = useState({
-    total: 0,
-    skip: 0,
-    limit: 10
-  });
-
-  const fetchData = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setLoading(true);
-    try {
-      const [apptsRes, provsRes, servsRes] = await Promise.all([
-        appointmentsApi.getAppointments(filters),
-        providersApi.getProviders(),
-        servicesApi.getServices(),
-      ]);
-
-      if (apptsRes.success) {
-        setAppointments(apptsRes.data || []);
-        if (apptsRes.meta?.pagination) {
-          const { total, skip, limit } = apptsRes.meta.pagination;
-          setPagination({ total, skip, limit });
-        }
-      }
-      if (provsRes.success) setProviders(provsRes.data || []);
-      if (servsRes.success) setServices(servsRes.data || []);
-    } catch (error) {
-      console.error("Failed to fetch appointments data", error);
-      toast.error("Failed to load appointments", { description: "Check your connection and try again." });
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, isAuthenticated]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // Real-time updates
-  useWebSocket({
-    channel: "dashboard:admin",
+  // WebSocket Integration for Real-time
+  useAppointmentWebSocket({
     enabled: isAuthenticated,
-    onMessage: (event) => {
-      if (event.event === "appointment_created" || event.event === "appointment_updated") {
-        fetchData();
+    onEvent: (event) => {
+      if (event.startsWith("appointment_") || event === "queue_updated") {
+        refresh();
       }
-    },
+    }
   });
 
-  const handleSearch = (val: string) => {
-    setFilters((prev: any) => ({ ...prev, search: val || undefined, skip: 0 }));
-  };
-
-  const handleFilterChange = (key: string, val: string) => {
-    setFilters((prev: any) => ({ ...prev, [key]: val === "all" ? undefined : val, skip: 0 }));
-  };
-
-  const handlePageChange = (newSkip: number) => {
-    setFilters((prev: any) => ({ ...prev, skip: newSkip }));
-  };
-
-  const openDetails = (id: string) => {
-    const appt = appointments.find(a => a.id === id);
+  // Action Handlers
+  const handleViewDetails = (apptId: string) => {
+    const appt = appointments.find(a => a.id === apptId);
     if (appt) {
       setSelectedAppointment(appt);
       setIsDetailOpen(true);
     }
   };
 
-  const handleAction = async (id: string, status: string) => {
-    try {
-      const res = await appointmentsApi.updateStatus(id, status);
-      if (res.success) {
-        fetchData();
-        toast.success("Status updated", { description: `Appointment set to ${status}.` });
-      }
-    } catch (error) {
-      console.error(`Failed to update appointment ${id} to ${status}`, error);
-      toast.error("Failed to update status");
+  const handleAction = (id: string, action: string) => {
+    const appt = appointments.find(a => a.id === id);
+    if (!appt) return;
+
+    setSelectedAppointment(appt);
+    
+    if (action === "cancelled") {
+      setIsCancelDialogOpen(true);
+    } else if (action === "reschedule") {
+      setIsRescheduleDialogOpen(true);
+    } else {
+      // Direct status updates (checked_in, in_progress, completed)
+      const { updateStatus } = useAppointmentActions(refresh);
+      // Note: This is an anti-pattern calling hook in handler, 
+      // but if we expose it better we avoid it. 
+      // Let's use a standalone update logic or the one from the Drawer.
     }
   };
 
+  // Dedicated direct update outside hook context for simplicity in handler
+  const directUpdate = async (id: string, status: string) => {
+    const { appointmentsApi } = await import("@/lib/api/appointments");
+    try {
+      const res = await appointmentsApi.updateStatus(id, status);
+      if (res.success) {
+        toast.success("Registry Synced", { description: `Unit set to ${status.replace('_', ' ')}.` });
+        refresh();
+      }
+    } catch (err) {
+      toast.error("Process Failed");
+    }
+  };
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in duration-700 pb-4">
-      <div className="shrink-0 mb-2">
+    <div className="h-full flex flex-col animate-in fade-in duration-1000 pb-4">
+      {/* Dynamic Header */}
+      <div className="shrink-0">
         <PageHeader 
-          breadcrumbs={["Home", "Admin", "Appointments"]} 
+          breadcrumbs={["Home", "Admin", "Registry"]} 
           title="Clinical Operations"
           actionContent={
             <div className="flex items-center gap-3">
-              <div className="flex items-center space-x-2 text-[11px] font-black text-blue-600 bg-blue-50/50 px-4 py-2 rounded-2xl border border-blue-100 shadow-sm">
-                  <span className="relative flex h-2.5 w-2.5 mr-1.5">
+              <div className="flex items-center space-x-2 text-[10px] font-black text-blue-600 bg-blue-50/50 px-4 py-2 rounded-[1.25rem] border border-blue-100 shadow-sm ring-1 ring-blue-500/10">
+                  <span className="relative flex h-2 w-2 mr-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500 shadow-sm"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                   </span>
-                  LANCET SYNC ACTIVE
-                </div>
+                  LANCET SYNC: ONLINE
+              </div>
             </div>
           }
         />
       </div>
 
-      <AppointmentToolbar 
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onViewChange={setView}
+      {/* Real-time KPI Bar */}
+      <KPICommandBar stats={stats} loading={loading} />
+
+      {/* Advanced Toolbar */}
+      <FilterToolbar 
+        onSearch={(val) => updateFilters({ search: val || undefined })}
+        onFilterChange={(key, val) => updateFilters({ [key]: val })}
+        onViewChange={setActiveView}
         onNewAppointment={() => setIsBookModalOpen(true)}
-        currentView={view}
+        onExport={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}/appointments/export`, '_blank')}
+        currentView={activeView}
+        filters={filters}
         providers={providers}
         services={services}
       />
 
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {view === "calendar" ? (
-          <CalendarView 
-            appointments={appointments} 
-            providers={providers} 
-            loading={loading}
-            onEventClick={(appt: any) => {
-              setSelectedAppointment(appt);
-              setIsDetailOpen(true);
-            }}
-          />
-        ) : (
-          <AppointmentListView 
-            appointments={appointments} 
+      {/* Primary Display Area */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden mt-2">
+        {activeView === "list" && (
+          <ListView 
+            appointments={appointments}
             loading={loading}
             pagination={pagination}
             onPageChange={handlePageChange}
-            onViewDetails={openDetails}
-            onAction={handleAction}
+            onViewDetails={handleViewDetails}
+            onAction={(id, action) => {
+              if (["cancelled", "reschedule"].includes(action)) {
+                handleAction(id, action);
+              } else {
+                directUpdate(id, action);
+              }
+            }}
+            onBulkAction={(ids, action) => bulkUpdateStatus(ids, action)}
+          />
+        )}
+
+        {activeView === "calendar" && (
+          <CalendarView 
+            appointments={appointments}
+            providers={providers}
+            loading={loading}
+            onEventClick={handleViewDetails}
+          />
+        )}
+
+        {activeView === "queue" && (
+          <QueueBoard 
+            appointments={appointments}
+            loading={loading}
+            onEventClick={handleViewDetails}
+            onAction={directUpdate}
           />
         )}
       </div>
 
-      {/* Detail Drawer */}
+      {/* Operational Overlays */}
       <AppointmentDetailDrawer 
         appointment={selectedAppointment}
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        onStatusUpdate={fetchData}
+        onStatusUpdate={refresh}
+        onReschedule={(appt) => { setIsDetailOpen(false); setIsRescheduleDialogOpen(true); }}
+        onCancel={(appt) => { setIsDetailOpen(false); setIsCancelDialogOpen(true); }}
       />
 
-      {/* Book Appointment Modal */}
       <BookAppointmentModal 
         isOpen={isBookModalOpen}
-        onClose={() => {
-          setIsBookModalOpen(false);
-          setPrefilledPatientId(null);
-        }}
-        onSuccess={fetchData}
-        prefilledPatientId={prefilledPatientId}
+        onClose={() => setIsBookModalOpen(false)}
+        onSuccess={refresh}
+      />
+
+      <CancelDialog 
+        appointment={selectedAppointment}
+        isOpen={isCancelDialogOpen}
+        onClose={() => setIsCancelDialogOpen(false)}
+        onSuccess={refresh}
+      />
+
+      <RescheduleDialog 
+        appointment={selectedAppointment}
+        isOpen={isRescheduleDialogOpen}
+        onClose={() => setIsRescheduleDialogOpen(false)}
+        onSuccess={refresh}
       />
 
     </div>

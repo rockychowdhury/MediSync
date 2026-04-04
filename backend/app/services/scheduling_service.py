@@ -28,6 +28,7 @@ class SchedulingService:
         target_start: datetime,
         target_end: datetime,
         exclude_appointment_id: Optional[str] = None,
+        skip_capacity_check: bool = False,
     ) -> None:
         """
         Validates whether a slot is completely free of conflicts for a provider.
@@ -42,11 +43,12 @@ class SchedulingService:
         if not provider:
             raise SchedulingException("Provider not found", "general")
             
-        current_count = crud_appointment.get_provider_capacity_metrics(
-            db, provider_id=provider_id, target_date=target_date
-        )
-        if current_count >= provider.max_daily_appointments:
-            raise SchedulingException("Provider daily capacity exceeded", "capacity_exceeded")
+        if not skip_capacity_check:
+            current_count = crud_appointment.get_provider_capacity_metrics(
+                db, provider_id=provider_id, target_date=target_date
+            )
+            if current_count >= provider.max_daily_appointments:
+                raise SchedulingException("Provider daily capacity exceeded", "capacity_exceeded")
 
         # 2. Check Overlapping Appointments
         # We include buffer_time in `appointment_end` so this query works perfectly.

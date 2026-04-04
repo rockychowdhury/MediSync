@@ -8,14 +8,19 @@ from app.schemas.role import (
     PermissionCreate,
     PermissionUpdate,
     PermissionResponse,
+    RoleCreate,
+    RoleUpdate,
     RoleResponse,
     RoleWithPermissions,
     RolePermissionUpdate,
+    UserSimpleResponse,
 )
 from app.utils.response import APIResponse, ResponseMessages
 from app.services.user_service import UserService
 
 router = APIRouter()
+
+SYSTEM_ROLES = ["admin", "receptionist", "provider"]
 
 # ═══════════════════════ Permission Management ═══════════════════════
 
@@ -148,6 +153,138 @@ def read_roles(
     return APIResponse.success(
         message=ResponseMessages.RETRIEVED_SUCCESS,
         data=[RoleWithPermissions.model_validate(r) for r in roles]
+    )
+
+
+@router.post("/roles", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
+def create_role(
+    *,
+    request: Request,
+    db: Session = Depends(get_db),
+    role_in: RoleCreate,
+    current_user: Any = Depends(get_current_active_admin),
+) -> Any:
+    """Create a new role (Admin only)."""
+    existing = crud.role.get_by_name(db, name=role_in.name)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role already exists"
+        )
+    role = crud.role.create(db, obj_in=role_in)
+    
+    UserService.log_activity(
+        db,
+        user_id=current_user.id,
+        action="create_role",
+        entity_type="role",
+        entity_id=str(role.id),
+        description=f"Administrative creation of role: {role.name}",
+        new_val=role_in.model_dump(mode="json"),
+        ip_address=request.client.host if request.client else None
+    )
+    
+    return APIResponse.success(
+        message=ResponseMessages.CREATED_SUCCESS,
+        data=RoleResponse.model_validate(role)
+    )
+
+
+@router.put("/roles/{id}", response_model=RoleResponse)
+def update_role(
+    *,
+    request: Request,
+    db: Session = Depends(get_db),
+    id: int,
+    role_in: RoleUpdate,
+    current_user: Any = Depends(get_current_active_admin),
+) -> Any:
+    """Update a role description (Admin only)."""
+    role_obj = crud.role.get(db, id=id)
+    if not role_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found"
+        )
+    updated_role = crud.role.update(db, db_obj=role_obj, obj_in=role_in)
+    
+    UserService.log_activity(
+        db,
+        user_id=current_user.id,
+        action="update_role",
+        entity_type="role",
+        entity_id=str(updated_role.id),
+        description=f"Administrative update of role: {updated_role.name}",
+        new_val=role_in.model_dump(mode="json"),
+        ip_address=request.client.host if request.client else None
+    )
+    
+    return APIResponse.success(
+        message=ResponseMessages.UPDATED_SUCCESS,
+        data=RoleResponse.model_validate(updated_role)
+    )
+
+
+@router.delete("/roles/{id}")
+def delete_role(
+    *,
+    request: Request,
+    db: Session = Depends(get_db),
+    id: int,
+    current_user: Any = Depends(get_current_active_admin),
+) -> Any:
+    """Delete a role (Admin only)."""
+    role_obj = crud.role.get(db, id=id)
+    if not role_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found"
+        )
+    
+    if role_obj.name in SYSTEM_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete system roles"
+        )
+        
+    if role_obj.user_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete role with {role_obj.user_count} active users"
+        )
+        
+    crud.role.delete(db, id=id)
+    
+    UserService.log_activity(
+        db,
+        user_id=current_user.id,
+        action="delete_role",
+        entity_type="role",
+        entity_id=str(id),
+        description=f"Administrative deletion of role ID: {id}",
+        ip_address=request.client.host if request.client else None
+    )
+    
+    return APIResponse.success(message=ResponseMessages.DELETED_SUCCESS)
+
+
+@router.get("/roles/{id}/users", response_model=list[UserSimpleResponse])
+def read_role_users(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    current_user: Any = Depends(get_current_active_admin),
+) -> Any:
+    """List users assigned to a specific role (Admin only)."""
+    role_obj = crud.role.get(db, id=id)
+    if not role_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Role not found"
+        )
+    return APIResponse.success(
+        message=ResponseMessages.RETRIEVED_SUCCESS,
+        data=[UserSimpleResponse.model_validate(u) for u in role_obj.users]
     )
 
 

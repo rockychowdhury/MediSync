@@ -21,6 +21,14 @@ class Role(Base):
     )
     users: Mapped[list["User"]] = relationship(back_populates="role")
 
+    @property
+    def user_count(self) -> int:
+        return len(self.users)
+
+    @property
+    def permission_count(self) -> int:
+        return len(self.permissions)
+
     def __repr__(self) -> str:
         return f"<Role {self.name}>"
 

@@ -1,5 +1,16 @@
-from pydantic import Field
+from pydantic import Field, EmailStr
 from app.schemas.core import CoreModel
+
+
+# ═══════════════════════ User Simple Response ═══════════════════════
+
+
+class UserSimpleResponse(CoreModel):
+    id: str
+    name: str
+    email: EmailStr
+
+    model_config = {"from_attributes": True}
 
 
 # ═══════════════════════ Role Schemas ═══════════════════════
@@ -21,6 +32,8 @@ class RoleUpdate(CoreModel):
 
 class RoleResponse(RoleBase):
     id: int
+    user_count: int = 0
+    permission_count: int = 0
 
     model_config = {"from_attributes": True}
 

@@ -44,7 +44,8 @@ const ADMIN_NAV: NavGroup[] = [
     items: [
       { name: "Appointments", href: "/dashboard/admin/appointments", icon: Calendar },
       { name: "Patients", href: "/dashboard/admin/patients", icon: Users },
-      { name: "Providers & Services", href: "/dashboard/admin/providers", icon: BriefcaseMedical },
+      { name: "Providers", href: "/dashboard/admin/providers", icon: Users },
+      { name: "Services & Specializations", href: "/dashboard/admin/services", icon: BriefcaseMedical },
       { name: "Waitlist", href: "/dashboard/admin/waitlist", icon: Clock },
     ]
   },
@@ -282,7 +283,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </header>
 
           {/* Dynamic Page Content Render */}
-          <main className="flex-1 overflow-hidden px-6 lg:px-10 pb-6 w-full">
+          <main className="flex-1 overflow-y-auto px-6 lg:px-10 pb-6 w-full custom-scrollbar">
             {/* Fully bound the nested wrappers to 100% available viewport height */}
             <div className="max-w-[1400px] w-full h-full mx-auto relative isolate pt-2">
               <TooltipProvider>

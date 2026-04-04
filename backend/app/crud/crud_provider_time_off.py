@@ -33,7 +33,7 @@ class CRUDProviderTimeOff(CRUDBase[ProviderTimeOff, ProviderTimeOffCreate, Provi
             db.query(self.model)
             .filter(
                 self.model.provider_id == provider_id,
-                self.model.is_approved == True,
+                self.model.status == "approved",
                 self.model.start_date <= target_date,
                 self.model.end_date >= target_date,
             )
@@ -44,8 +44,26 @@ class CRUDProviderTimeOff(CRUDBase[ProviderTimeOff, ProviderTimeOffCreate, Provi
         self, db: Session, *, db_obj: ProviderTimeOff, approver_id: str
     ) -> ProviderTimeOff:
         """Approve a time-off request."""
+        from datetime import datetime, timezone
         db_obj.is_approved = True
+        db_obj.status = "approved"
         db_obj.approved_by = approver_id
+        db_obj.reviewed_at = datetime.now(timezone.utc)
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def reject_time_off(
+        self, db: Session, *, db_obj: ProviderTimeOff, rejector_id: str, reason: str | None = None
+    ) -> ProviderTimeOff:
+        """Reject a time-off request."""
+        from datetime import datetime, timezone
+        db_obj.is_approved = False
+        db_obj.status = "rejected"
+        db_obj.rejected_by = rejector_id
+        db_obj.rejection_reason = reason
+        db_obj.reviewed_at = datetime.now(timezone.utc)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

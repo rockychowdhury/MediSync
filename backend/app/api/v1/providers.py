@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any
 from fastapi import APIRouter, Depends, Query, status, Request
 from sqlalchemy.orm import Session
@@ -270,3 +271,43 @@ def remove_service_from_provider(
     )
     
     return APIResponse.success(message="Service successfully removed from provider.")
+
+@router.patch("/{id}/status")
+def update_provider_status(
+    *,
+    request: Request,
+    db: Session = Depends(get_db),
+    id: str,
+    status_in: dict[str, str],
+    current_admin: User = Depends(get_current_active_admin),
+) -> Any:
+    """Lightweight status update for provider presence."""
+    provider_db = crud.provider.get(db, id=id)
+    if not provider_db:
+        return APIResponse.error(message="Provider not found", status_code=status.HTTP_404_NOT_FOUND)
+    
+    new_status = status_in.get("status")
+    if not new_status:
+        return APIResponse.error(message="Status required", status_code=status.HTTP_400_BAD_REQUEST)
+
+    provider_db.status = new_status
+    db.commit()
+    db.refresh(provider_db)
+    
+    return APIResponse.success(message="Status updated", data={"id": id, "status": new_status})
+
+@router.get("/{id}/stats")
+def read_provider_stats(
+    id: str,
+    date_from: date = Query(...),
+    date_to: date = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """Retrieve performance statistics for a specific provider."""
+    provider_db = crud.provider.get(db, id=id)
+    if not provider_db:
+        return APIResponse.error(message="Provider not found", status_code=status.HTTP_404_NOT_FOUND)
+    
+    stats = crud.provider.get_stats(db, provider_id=id, date_from=date_from, date_to=date_to)
+    return APIResponse.success(message="Stats retrieved", data=stats)

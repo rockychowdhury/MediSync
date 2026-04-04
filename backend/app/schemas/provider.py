@@ -41,5 +41,9 @@ class ProviderResponse(ProviderBase):
     model_config = {"from_attributes": True}
 
 
+from app.schemas.user import UserResponse
+
+
 class ProviderWithDetails(ProviderResponse):
     specialization: SpecializationResponse
+    user: UserResponse

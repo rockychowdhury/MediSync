@@ -30,6 +30,18 @@ class ProviderTimeOff(Base):
     is_approved: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )
+    status: Mapped[str] = mapped_column(
+        String(20), default="pending", nullable=False
+    )
+    rejected_by: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    rejection_reason: Mapped[str | None] = mapped_column(
+        String(500), nullable=True
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -41,6 +53,10 @@ class ProviderTimeOff(Base):
     approver: Mapped["User | None"] = relationship(
         back_populates="approved_time_offs",
         foreign_keys=[approved_by],
+    )
+    rejector: Mapped["User | None"] = relationship(
+        back_populates="rejected_time_offs",
+        foreign_keys=[rejected_by],
     )
 
     def __repr__(self) -> str:

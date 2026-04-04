@@ -20,5 +20,9 @@ export const servicesApi = {
   updateService: async (id: string, data: any) => {
     const response = await apiClient.put(`/services/${id}`, data);
     return response.data;
+  },
+  deleteService: async (id: string) => {
+    const response = await apiClient.delete(`/services/${id}`);
+    return response.data;
   }
 };

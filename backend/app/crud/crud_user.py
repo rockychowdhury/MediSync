@@ -44,12 +44,37 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             query = query.filter(self.model.is_active == is_active)
         
         # By default, exclude soft-deleted records unless search is specific
-        if not search:
+        from app.models.base_model import BaseModel
+        if hasattr(self.model, "deleted_at") and not search:
             query = query.filter(self.model.deleted_at == None)
         
         if search:
             query = query.filter(
                 (self.model.email.ilike(f"%{search}%")) | 
+                (self.model.name.ilike(f"%{search}%"))
+            )
+            
+        total = query.count()
+        users = query.offset(skip).limit(limit).all()
+        return users, total
+
+    def get_non_providers(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        search: str | None = None
+    ) -> tuple[list[User], int]:
+        """Fetch users who do NOT have an associated provider profile."""
+        from app.models.provider import Provider
+        
+        query = db.query(self.model).outerjoin(Provider).filter(Provider.id == None)
+        query = query.filter(self.model.is_active == True)
+        
+        if search:
+            query = query.filter(
+                (self.model.email.ilike(f"%{search}%")) |
                 (self.model.name.ilike(f"%{search}%"))
             )
             

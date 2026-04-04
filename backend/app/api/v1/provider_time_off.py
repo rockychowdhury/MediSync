@@ -124,6 +124,29 @@ def approve_time_off(
     )
 
 
+@router.patch("/{id}/reject", response_model=dict)
+def reject_time_off(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int,
+    rejection_in: dict[str, str],
+    current_user: User = Depends(deps.get_current_active_staff),
+):
+    """
+    Reject a provider's time-off request. Restricted to staff/admins.
+    """
+    pto = crud_time_off.get(db, id=id)
+    if not pto:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Time-off request not found")
+
+    reason = rejection_in.get("rejection_reason")
+    pto = crud_time_off.reject_time_off(db, db_obj=pto, rejector_id=current_user.id, reason=reason)
+    return APIResponse.success(
+        message="Time-off request rejected successfully",
+        data=ProviderTimeOffResponse.model_validate(pto).model_dump(),
+    )
+
+
 @router.delete("/{id}", response_model=dict)
 def delete_time_off(
     *,

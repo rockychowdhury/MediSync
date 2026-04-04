@@ -50,6 +50,10 @@ class User(BaseModel):
         back_populates="approver",
         foreign_keys="[ProviderTimeOff.approved_by]",
     )
+    rejected_time_offs: Mapped[list["ProviderTimeOff"]] = relationship(
+        back_populates="rejector",
+        foreign_keys="[ProviderTimeOff.rejected_by]",
+    )
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

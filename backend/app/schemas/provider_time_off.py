@@ -1,11 +1,14 @@
 from datetime import date, datetime
 from datetime import time as time_type
+from typing import Literal
 
 from pydantic import Field, model_validator
 from app.schemas.core import CoreModel
 
 
 # ═══════════════════════ Provider Time Off Schemas ═══════════════════════
+
+TimeOffStatus = Literal["pending", "approved", "rejected"]
 
 
 class ProviderTimeOffBase(CoreModel):
@@ -34,13 +37,20 @@ class ProviderTimeOffUpdate(CoreModel):
     end_time: time_type | None = None
     reason: str | None = Field(None, max_length=255)
     is_approved: bool | None = None
+    status: TimeOffStatus | None = None
     approved_by: str | None = None
+    rejected_by: str | None = None
+    rejection_reason: str | None = None
 
 
 class ProviderTimeOffResponse(ProviderTimeOffBase):
     id: int
     approved_by: str | None = None
     is_approved: bool
+    status: TimeOffStatus
+    rejected_by: str | None = None
+    rejection_reason: str | None = None
+    reviewed_at: datetime | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

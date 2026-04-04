@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, status, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app import crud
+from app.api import deps
 from app.api.deps import get_db, get_current_active_admin
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
@@ -236,5 +237,22 @@ def read_user_audit(
     return APIResponse.paginated_success(
         message=ResponseMessages.RETRIEVED_SUCCESS,
         data=data,
+        pagination_data={"total": total, "skip": skip, "limit": limit}
+    )
+@router.get("/non-providers", response_model=list[UserResponse])
+def read_non_providers(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    search: str | None = Query(None),
+    current_admin: User = Depends(get_current_active_admin),
+) -> Any:
+    """Retrieve users who do not have a provider profile (Admin only)."""
+    users, total = crud.user.get_non_providers(
+        db, skip=skip, limit=limit, search=search
+    )
+    return APIResponse.paginated_success(
+        message=ResponseMessages.RETRIEVED_SUCCESS,
+        data=[UserResponse.model_validate(u) for u in users],
         pagination_data={"total": total, "skip": skip, "limit": limit}
     )

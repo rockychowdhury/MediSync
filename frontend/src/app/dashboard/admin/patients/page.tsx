@@ -1,157 +1,209 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { RootState } from "@/store";
 import { PageHeader } from "@/components/dashboard/ui/PageHeader";
-import { PatientToolbar } from "@/components/dashboard/patients/PatientToolbar";
-import { PatientTable } from "@/components/dashboard/patients/PatientTable";
-import { CreatePatientModal } from "@/components/dashboard/patients/CreatePatientModal";
-import { PatientDetailDrawer } from "@/components/dashboard/patients/PatientDetailDrawer";
-import { patientsApi } from "@/lib/api/patients";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  UserPlus, 
+  Users, 
+  ArrowLeft,
+  ShieldCheck,
+  BadgeCheck
+} from "lucide-react";
 
-import { useWebSocket } from "@/hooks/useWebSocket";
-import { UserCheck } from "lucide-react";
-import { toast } from "sonner";
+import { usePatients } from "./hooks/usePatients";
+import { usePatientDetail } from "./hooks/usePatientDetail";
+import { PatientList } from "./components/PatientList";
+import { PatientDetailPanel } from "./components/PatientDetailPanel";
+import { PatientFormDrawer } from "./components/PatientFormDrawer";
+import { DeactivateDialog } from "./components/DeactivateDialog";
 
-
-export default function PatientsPage() {
+export default function PatientsManagementPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   
-  const [patients, setPatients] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  // Master Selection & UI State
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<any>(null);
 
-  const [filters, setFilters] = useState<any>({
-    skip: 0,
-    limit: 10,
-    search: undefined,
-    is_active: undefined,
-  });
+  // Data Hooks
+  const { 
+    patients, 
+    loading: listLoading, 
+    loadingMore, 
+    hasMore, 
+    totalCount, 
+    filters, 
+    updateFilters, 
+    loadMore, 
+    refresh: refreshList 
+  } = usePatients();
 
-  const [pagination, setPagination] = useState({
-    total: 0,
-    skip: 0,
-    limit: 10
-  });
+  const { 
+    patient, 
+    stats, 
+    loading: detailLoading, 
+    refresh: refreshDetail, 
+    updateStatus,
+  } = usePatientDetail(selectedId);
 
-  const fetchData = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setLoading(true);
-    try {
-      const res = await patientsApi.getPatients(filters);
-      if (res.success) {
-        setPatients(res.data || []);
-        if (res.meta?.pagination) {
-          const { total, skip, limit } = res.meta.pagination;
-          setPagination({ total, skip, limit });
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch patients data", error);
-      toast.error("Failed to load patient records");
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, isAuthenticated]);
-
+  // Handle Initial Selection from URL
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const id = searchParams.get("id");
+    if (id) setSelectedId(id);
+  }, [searchParams]);
 
-  // Real-time updates
-  useWebSocket({
-    channel: "dashboard:admin",
-    enabled: isAuthenticated,
-    onMessage: (event) => {
-      if (event.event === "patient_created" || event.event === "patient_updated") {
-        fetchData();
-      }
-    },
-  });
+  if (!isAuthenticated) return null;
 
-  const handleSearch = (val: string) => {
-    setFilters((prev: any) => ({ ...prev, search: val || undefined, skip: 0 }));
+  const handleCreate = () => {
+    setEditingPatient(null);
+    setIsDrawerOpen(true);
   };
 
-  const handleFilterChange = (key: string, val: string) => {
-    let finalVal: any = val;
-    if (val === "true") finalVal = true;
-    if (val === "false") finalVal = false;
-    if (val === "all") finalVal = undefined;
-    
-    setFilters((prev: any) => ({ ...prev, [key]: finalVal, skip: 0 }));
+  const handleEdit = (p: any) => {
+    setEditingPatient(p);
+    setIsDrawerOpen(true);
   };
 
-  const handlePageChange = (newSkip: number) => {
-    setFilters((prev: any) => ({ ...prev, skip: newSkip }));
+  const handleBook = (p: any) => {
+    router.push(`/dashboard/admin/appointments?patient_id=${p.id}`);
   };
 
-  const openDetails = (id: string) => {
-    setSelectedPatientId(id);
-    setIsDetailOpen(true);
-  };
-
-  const handleBookAppointment = (patient: any) => {
-    // Redirect to appointments page with patient_id pre-filled in query
-    router.push(`/dashboard/admin/appointments?patient_id=${patient.id}&patient_name=${encodeURIComponent(patient.name || patient.full_name)}`);
+  const handleToggleStatus = (val: boolean) => {
+    if (!val) {
+      setIsDeactivateOpen(true);
+    } else {
+      updateStatus(true);
+    }
   };
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in duration-700 pb-4">
-      <div className="shrink-0 mb-2">
+    <div className="h-[calc(100vh-140px)] flex flex-col animate-in fade-in duration-1000 overflow-hidden">
+      {/* 1. Page Header Area */}
+      <div className="shrink-0 mb-4 px-1">
         <PageHeader 
-          breadcrumbs={["Home", "Admin", "Patients"]} 
-          title="Patient Registry"
+          breadcrumbs={["Home", "Admin", "Registry"]} 
+          title="Patient Master Registry"
+          description="Manage clinical enrollment, demographics, and unit history logs."
           actionContent={
             <div className="flex items-center gap-3">
-               <div className="flex items-center space-x-2 text-[10px] font-black text-green-600 bg-green-50/50 px-4 py-2 rounded-2xl border border-green-100 shadow-sm uppercase tracking-widest">
+               <div className="hidden lg:flex items-center space-x-2 text-[10px] font-black text-blue-600 bg-blue-50/50 px-4 py-2 rounded-2xl border border-blue-100 shadow-sm uppercase tracking-widest mr-2">
                   <span className="relative flex h-2 w-2 mr-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500 shadow-sm"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500 shadow-sm"></span>
                   </span>
-                  Clinical Sync Verified
+                  Registry Sync Active
                 </div>
+                <Button 
+                  onClick={handleCreate}
+                  className="h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-[12px] uppercase tracking-wider shadow-lg shadow-blue-100 transition-all active:scale-95"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Enroll Patient
+                </Button>
             </div>
           }
         />
+        <div className="mt-2 flex items-center gap-2">
+           <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-100 text-[10px] font-black uppercase tracking-widest gap-2 py-1 px-3">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              HIPAA Compliant Workstation
+           </Badge>
+           <p className="text-[10px] text-slate-400 italic">Sensitive data is encrypted during transit and at rest.</p>
+        </div>
       </div>
 
-      <PatientToolbar 
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onNewPatient={() => setIsCreateModalOpen(true)}
-      />
+      {/* 2. Main Workspace (Split View) */}
+      <div className="flex-1 flex gap-6 min-h-0">
+        {/* LEFT: MASTER LIST */}
+        <div className="w-[340px] h-full overflow-hidden hidden md:block">
+          <PatientList 
+            patients={patients}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            filters={filters}
+            onFilterChange={updateFilters}
+            loading={listLoading}
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            onLoadMore={loadMore}
+            totalCountCount={totalCount}
+            onNewPatient={handleCreate}
+            onEdit={handleEdit}
+            onBook={handleBook}
+            onDeactivate={(p) => { setSelectedId(p.id); setIsDeactivateOpen(true); }}
+          />
+        </div>
 
-      <div className="flex-1 min-h-0">
-        <PatientTable 
-          patients={patients}
-          loading={loading}
-          pagination={pagination}
-          onPageChange={handlePageChange}
-          onViewPatient={openDetails}
-          onBookAppointment={handleBookAppointment}
-        />
+        {/* RIGHT: DETAIL WORKSPACE */}
+        <div className="flex-1 h-full bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm flex flex-col relative group/workspace">
+           {selectedId ? (
+              <PatientDetailPanel 
+                patient={patient}
+                stats={stats}
+                loading={detailLoading}
+                onEdit={handleEdit}
+                onBook={handleBook}
+                onStatusChange={handleToggleStatus}
+                onToggleNotifications={(val) => console.log("Toggle notifications", val)}
+                onRefresh={refreshDetail}
+              />
+           ) : (
+             <div className="flex-1 flex flex-col items-center justify-center text-center p-12 space-y-8 animate-in fade-in duration-1000">
+                <div className="relative">
+                   <div className="w-32 h-32 rounded-[2.5rem] bg-slate-50 flex items-center justify-center border border-slate-100 shadow-inner group-hover/workspace:rotate-3 transition-transform duration-700">
+                      <Users className="w-12 h-12 text-slate-200" />
+                   </div>
+                   <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-2xl bg-white shadow-xl flex items-center justify-center border border-slate-50">
+                      <BadgeCheck className="w-5 h-5 text-blue-500" />
+                   </div>
+                </div>
+                
+                <div className="max-w-xs space-y-3">
+                   <h3 className="text-xl font-black text-slate-800 tracking-tight">Clinical Knowledge Base</h3>
+                   <p className="text-xs text-slate-400 font-bold leading-relaxed uppercase tracking-widest">
+                      Select a record from the registry to manage demographics, unit history, and audit logs.
+                   </p>
+                </div>
+
+                <div className="flex flex-col gap-3 w-48">
+                   <Button onClick={handleCreate} className="h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/10 transition-all active:scale-95">
+                      Register First Patient
+                   </Button>
+                </div>
+             </div>
+           )}
+        </div>
       </div>
 
-      {/* Create Patient Modal */}
-      <CreatePatientModal 
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={fetchData}
+      {/* 3. Operational Drawers & Modals */}
+      <PatientFormDrawer 
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        patient={editingPatient}
+        onSuccess={() => {
+           refreshList();
+           if (selectedId) refreshDetail();
+        }}
       />
 
-      {/* Patient Detail Drawer */}
-      <PatientDetailDrawer 
-        patientId={selectedPatientId}
-        isOpen={isDetailOpen}
-        onClose={() => setIsDetailOpen(false)}
-        onUpdate={fetchData}
+      <DeactivateDialog 
+        isOpen={isDeactivateOpen}
+        onClose={() => setIsDeactivateOpen(false)}
+        onConfirm={async () => {
+           await updateStatus(false);
+           setIsDeactivateOpen(false);
+           refreshList();
+        }}
+        patient={patient}
+        loading={detailLoading}
       />
     </div>
   );

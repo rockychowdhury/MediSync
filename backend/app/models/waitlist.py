@@ -55,6 +55,9 @@ class Waitlist(TimeStampMixin, Base):
     status: Mapped[str] = mapped_column(
         String(20), default="waiting", nullable=False, index=True
     )
+    assignment_method: Mapped[str | None] = mapped_column(
+        String(20), nullable=True
+    )  # auto | manual
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # ── Relationships ──
@@ -71,7 +74,7 @@ class Waitlist(TimeStampMixin, Base):
 
     # ── Indexes ──
     __table_args__ = (
-        Index("ix_waitlist_queue_order", "status", "priority", "created_at"),
+        Index("ix_waitlist_queue_order", "status", "priority", "queue_position", "created_at"),
         Index("ix_waitlist_slot_match", "service_id", "provider_id"),
     )
 

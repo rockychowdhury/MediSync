@@ -16,5 +16,17 @@ export const patientsApi = {
   updatePatient: async (id: string | number, data: any) => {
     const response = await apiClient.put(`/patients/${id}`, data);
     return response.data;
+  },
+  getPatientStats: async (id: string | number) => {
+    const response = await apiClient.get(`/patients/${id}/stats`);
+    return response.data;
+  },
+  activatePatient: async (id: string | number) => {
+    const response = await apiClient.patch(`/patients/${id}/activate`);
+    return response.data;
+  },
+  deactivatePatient: async (id: string | number) => {
+    const response = await apiClient.patch(`/patients/${id}/deactivate`);
+    return response.data;
   }
 };

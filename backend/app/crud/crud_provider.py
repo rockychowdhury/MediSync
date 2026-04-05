@@ -9,12 +9,30 @@ from app.models.appointment import Appointment
 from sqlalchemy import func
 from datetime import date
 from sqlalchemy.orm import selectinload
+from app.services.websocket_manager import ws_manager
 
 
 class CRUDProvider(CRUDBase[Provider, ProviderCreate, ProviderUpdate]):
-    """
-    CRUD operations for Provider instances.
-    """
+    def _broadcast_change(self, event: str, data: dict):
+        ws_manager.broadcast_sync(channel="dashboard:global", event=event, data=data)
+
+    def create(self, db: Session, *, obj_in: ProviderCreate | dict) -> Provider:
+        db_obj = super().create(db, obj_in=obj_in)
+        self._broadcast_change("provider_created", {"id": str(db_obj.id)})
+        return db_obj
+
+    def update(
+        self, db: Session, *, db_obj: Provider, obj_in: ProviderUpdate | dict
+    ) -> Provider:
+        db_obj = super().update(db, db_obj=db_obj, obj_in=obj_in)
+        self._broadcast_change("provider_updated", {"id": str(db_obj.id), "status": db_obj.status})
+        return db_obj
+
+    def delete(self, db: Session, *, id: str) -> Provider | None:
+        db_obj = super().delete(db, id=id)
+        if db_obj:
+            self._broadcast_change("provider_deleted", {"id": id})
+        return db_obj
 
     def get_multi_filtered(
         self, 

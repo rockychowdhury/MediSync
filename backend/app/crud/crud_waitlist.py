@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.models.waitlist import Waitlist
 from app.schemas.waitlist import WaitlistCreate, WaitlistUpdate
+from app.services.websocket_manager import ws_manager
 
 
 class CRUDWaitlist(CRUDBase[Waitlist, WaitlistCreate, WaitlistUpdate]):
@@ -25,6 +26,9 @@ class CRUDWaitlist(CRUDBase[Waitlist, WaitlistCreate, WaitlistUpdate]):
         )
         return max_pos or 0
 
+    def _broadcast_change(self, event: str, data: dict):
+        ws_manager.broadcast_sync(channel="dashboard:global", event=event, data=data)
+
     def create(self, db: Session, *, obj_in: WaitlistCreate) -> Waitlist:
         """Create waitlist entry ensuring proper queue position."""
         position = self.get_highest_queue_position(
@@ -38,6 +42,20 @@ class CRUDWaitlist(CRUDBase[Waitlist, WaitlistCreate, WaitlistUpdate]):
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+        self._broadcast_change("waitlist_created", {"id": str(db_obj.id)})
+        return db_obj
+
+    def update(
+        self, db: Session, *, db_obj: Waitlist, obj_in: WaitlistUpdate | dict
+    ) -> Waitlist:
+        db_obj = super().update(db, db_obj=db_obj, obj_in=obj_in)
+        self._broadcast_change("waitlist_updated", {"id": str(db_obj.id), "status": db_obj.status})
+        return db_obj
+
+    def delete(self, db: Session, *, id: str) -> Waitlist | None:
+        db_obj = super().delete(db, id=id)
+        if db_obj:
+            self._broadcast_change("waitlist_deleted", {"id": id})
         return db_obj
 
     def get_ordered_waitlist_for_service(

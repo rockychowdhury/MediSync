@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { siteConfig } from "@/config/site";
 
 interface WebSocketMessage {
   event: string;
@@ -44,9 +45,10 @@ export function useWebSocket({ channel, onMessage, enabled = true, token = null 
         wsRef.current = null;
       }
 
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const host = window.location.host;
-      let wsUrl = `${protocol}//${host}/api/v1/ws/${channel}`;
+      // Derive WebSocket URL from siteConfig.apiUrl
+      // e.g. http://localhost:8000/api/v1 -> ws://localhost:8000/api/v1/ws/channel
+      const wsBaseUrl = siteConfig.apiUrl.replace(/^http/, "ws");
+      let wsUrl = `${wsBaseUrl}/ws/${channel}`;
 
       if (token) {
         wsUrl += `?token=${token}`;

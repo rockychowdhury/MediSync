@@ -13,10 +13,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.utils.mixins import TimeStampMixin
+from app.utils.mixins import TimeStampMixin, SoftDeleteMixin
 
 
-class Provider(TimeStampMixin, Base):
+class Provider(TimeStampMixin, SoftDeleteMixin, Base):
     """
     Extends the users table with clinical attributes.
     PK is also a FK → users.id (one-to-one extension).

@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     auth, users, profile, patients, rbac, activity_logs, 
     specializations, services, providers, availability, 
-    provider_time_off, appointments, waitlist, websocket
+    provider_time_off, appointments, waitlist, websocket, dashboard
 )
 from app.utils.response import APIResponse, ResponseMessages
 
@@ -23,6 +23,7 @@ router.include_router(provider_time_off.router, prefix="/time-off", tags=["time-
 router.include_router(appointments.router, prefix="/appointments", tags=["appointments"])
 router.include_router(waitlist.router, prefix="/waitlist", tags=["waitlist"])
 router.include_router(websocket.router, prefix="/ws", tags=["websocket"])
+router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/", tags=["v1"])
 def root():

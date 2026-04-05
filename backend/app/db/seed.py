@@ -36,6 +36,7 @@ def seed_data(db: Session) -> None:
         {"name": "appointments:manage", "description": "Book or modify appointments."},
         {"name": "providers:read", "description": "View healthcare provider details."},
         {"name": "providers:manage", "description": "Manage provider schedules and services."},
+        {"name": "dashboard:read", "description": "View the administrative overview dashboard."},
     ]
     
     db_permissions = {}

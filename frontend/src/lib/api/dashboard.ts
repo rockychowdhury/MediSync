@@ -1,10 +1,30 @@
 import apiClient from "./client";
 
 export const dashboardApi = {
-  getStats: async () => {
-    return apiClient.get("/activity_logs/stats");
+  getSummary: async () => {
+    const response = await apiClient.get("/dashboard/summary");
+    return response.data;
   },
-  getActivityLogs: async (limit = 10, skip = 0) => {
-    return apiClient.get("/activity_logs/", { params: { limit, skip } });
+  getProviderUtilisation: async () => {
+    const response = await apiClient.get("/dashboard/provider-utilisation");
+    return response.data;
+  },
+  getAppointmentsByHour: async (dateFrom: string, dateTo: string) => {
+    const response = await apiClient.get("/dashboard/appointments-by-hour", {
+      params: { date_from: dateFrom, date_to: dateTo }
+    });
+    return response.data;
+  },
+  getServiceDemand: async (dateFrom: string, dateTo: string, limit: number = 5) => {
+    const response = await apiClient.get("/dashboard/service-demand", {
+      params: { date_from: dateFrom, date_to: dateTo, limit }
+    });
+    return response.data;
+  },
+  getNoShowTrend: async (dateFrom: string, dateTo: string) => {
+    const response = await apiClient.get("/dashboard/no-show-trend", {
+      params: { date_from: dateFrom, date_to: dateTo }
+    });
+    return response.data;
   }
 };

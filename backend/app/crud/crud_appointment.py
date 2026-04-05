@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.crud.base import CRUDBase
 from app.models.appointment import Appointment
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate
+from app.services.websocket_manager import ws_manager
 
 
 class CRUDAppointment(CRUDBase[Appointment, AppointmentCreate, AppointmentUpdate]):
@@ -157,6 +158,14 @@ class CRUDAppointment(CRUDBase[Appointment, AppointmentCreate, AppointmentUpdate
 
         return f"{prefix}{seq:03d}"
 
+    def _broadcast_change(self, event: str, data: dict):
+        ws_manager.broadcast_sync(channel="dashboard:global", event=event, data=data)
+
+    def create(self, db: Session, *, obj_in: AppointmentCreate | dict) -> Appointment:
+        db_obj = super().create(db, obj_in=obj_in)
+        self._broadcast_change("appointment_created", {"id": str(db_obj.id)})
+        return db_obj
+
     def create_with_number(
         self, db: Session, *, obj_in: AppointmentCreate
     ) -> Appointment:
@@ -173,6 +182,20 @@ class CRUDAppointment(CRUDBase[Appointment, AppointmentCreate, AppointmentUpdate
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+        self._broadcast_change("appointment_created", {"id": str(db_obj.id)})
+        return db_obj
+
+    def update(
+        self, db: Session, *, db_obj: Appointment, obj_in: AppointmentUpdate | dict
+    ) -> Appointment:
+        db_obj = super().update(db, db_obj=db_obj, obj_in=obj_in)
+        self._broadcast_change("appointment_updated", {"id": str(db_obj.id), "status": db_obj.status})
+        return db_obj
+
+    def delete(self, db: Session, *, id: str) -> Appointment | None:
+        db_obj = super().delete(db, id=id)
+        if db_obj:
+            self._broadcast_change("appointment_deleted", {"id": id})
         return db_obj
 
     def get_today_stats(self, db: Session, target_date: date) -> dict:
@@ -214,6 +237,30 @@ class CRUDAppointment(CRUDBase[Appointment, AppointmentCreate, AppointmentUpdate
             "no_show_rate_percent": no_show_rate,
             "active_providers": active_providers_count,
         }
+
+    def get_hourly_stats(self, db: Session, target_date: date) -> list[dict]:
+        """
+        Calculates hourly status counts for a specific date.
+        """
+        results = (
+            db.query(
+                func.extract('hour', Appointment.appointment_start).label('hour'),
+                Appointment.status,
+                func.count(Appointment.id)
+            )
+            .filter(func.date(Appointment.appointment_start) == target_date)
+            .group_by('hour', Appointment.status)
+            .all()
+        )
+        
+        hourly_data = {h: {"hour": h, "scheduled": 0, "completed": 0, "in_progress": 0, "cancelled": 0, "no_show": 0, "checked_in": 0} for h in range(8, 19)}
+        
+        for hour, status, count in results:
+            h_int = int(hour)
+            if h_int in hourly_data:
+                hourly_data[h_int][status] = count
+                
+        return sorted(list(hourly_data.values()), key=lambda x: x["hour"])
 
     def get_stats_by_range(self, db: Session, start_date: date, end_date: date) -> list[dict]:
         """

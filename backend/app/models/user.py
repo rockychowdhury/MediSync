@@ -55,5 +55,9 @@ class User(BaseModel):
         foreign_keys="[ProviderTimeOff.rejected_by]",
     )
 
+    @property
+    def full_name(self) -> str:
+        return self.name
+
     def __repr__(self) -> str:
         return f"<User {self.email}>"

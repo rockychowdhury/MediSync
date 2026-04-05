@@ -34,7 +34,7 @@ def read_users(
         pagination_data={"total": total, "skip": skip, "limit": limit}
     )
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_user(
     *,
     request: Request,

@@ -54,12 +54,18 @@ export function CreateUserDialog({
   });
 
   const generatePassword = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let pass = "";
-    for (let i = 0; i < 12; i++) {
-      pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    const words = ["Swift", "Elite", "Prime", "Core", "Global", "Direct", "Nova", "Pulse", "Zenith", "Apex"];
+    const clinicalTerms = ["Clinic", "Med", "Care", "Health", "Sync", "Hub", "Node", "Safe", "Trust", "Life"];
+    const word1 = words[Math.floor(Math.random() * words.length)];
+    const word2 = clinicalTerms[Math.floor(Math.random() * clinicalTerms.length)];
+    const num = Math.floor(100 + Math.random() * 899);
+    const pass = `${word1}-${word2}-${num}`;
     setFormData(p => ({ ...p, password: pass }));
+  };
+
+  const handleClose = () => {
+    setFormData({ name: "", email: "", password: "", role_id: "" });
+    onClose();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,8 +82,7 @@ export function CreateUserDialog({
           description: `User ${formData.name} identity has been successfully registered in the workforce registry.`,
         });
         onSuccess();
-        setFormData({ name: "", email: "", password: "", role_id: "" });
-        onClose();
+        handleClose();
       } else {
         toast.error(res.message || "Protocol Failure: Failed to enrol staff identity.");
       }
@@ -89,18 +94,18 @@ export function CreateUserDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[540px] rounded-[32px] border-slate-200 p-0 overflow-hidden bg-white shadow-2xl">
-        <DialogHeader className="p-8 bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
+    <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-[480px] rounded-[32px] border-slate-200 p-0 overflow-hidden bg-white shadow-2xl transition-all duration-500">
+        <DialogHeader className="p-6 bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
            <div className="flex flex-col">
-            <DialogTitle className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 text-indigo-500">
+            <DialogTitle className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+              <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-indigo-500">
                 <UserPlus className="w-5 h-5" />
               </div>
               Staff Induction
             </DialogTitle>
-            <DialogDescription className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 ml-1">
-              Registering new personnel identity in workforce registry
+            <DialogDescription className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 ml-1">
+              Registering new personnel identity
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -142,12 +147,12 @@ export function CreateUserDialog({
                    value={formData.role_id}
                    onValueChange={(val) => setFormData(p => ({ ...p, role_id: val }))}
                  >
-                   <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-white font-black text-slate-700 text-[10px] uppercase tracking-widest shadow-none">
-                     <SelectValue placeholder="Identify Role" />
-                   </SelectTrigger>
-                   <SelectContent className="rounded-2xl border-slate-200 shadow-2xl p-2 bg-white">
-                      {roles.map(role => (
-                        <SelectItem key={role.id} value={role.id.toString()} className="font-black text-[10px] uppercase tracking-widest py-2.5 rounded-xl hover:bg-slate-50 cursor-pointer">
+                    <SelectTrigger className="h-10 rounded-xl border-slate-200 bg-white font-black text-slate-700 text-[10px] uppercase tracking-widest shadow-none hover:bg-slate-50 transition-colors">
+                      <SelectValue placeholder="Identify Role" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-slate-200 shadow-2xl p-2 bg-white">
+                       {roles.map(role => (
+                        <SelectItem key={role.id} value={role.id.toString()} className="font-black text-[10px] uppercase tracking-widest py-2 rounded-lg hover:bg-slate-50 cursor-pointer">
                            {role.name}
                         </SelectItem>
                       ))}
@@ -184,20 +189,20 @@ export function CreateUserDialog({
            </div>
         </form>
 
-        <DialogFooter className="px-8 pb-8 flex items-center justify-between gap-4">
+        <DialogFooter className="px-8 pb-6 flex items-center justify-between gap-3">
           <Button 
             variant="ghost" 
-            onClick={onClose} 
-            className="flex-1 h-12 rounded-2xl font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest text-[10px] bg-slate-50/50 border border-slate-100"
+            onClick={handleClose} 
+            className="flex-1 h-11 rounded-xl font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest text-[10px] bg-slate-50/50 border border-slate-100"
           >
-            Abort Inclusion
+            Abort
           </Button>
           <Button 
             disabled={loading || !formData.role_id}
             onClick={handleSubmit}
-            className="flex-[2] h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black transition-all active:scale-95 shadow-xl shadow-indigo-100 text-[10px] uppercase tracking-widest"
+            className="flex-[2] h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black transition-all active:scale-95 shadow-lg shadow-indigo-100 text-[10px] uppercase tracking-widest"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Enroll Staff"}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Enroll"}
           </Button>
         </DialogFooter>
       </DialogContent>

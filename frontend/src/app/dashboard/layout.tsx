@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { logoutAction } from "@/store/slices/authSlice";
+import { authApi } from "@/lib/api/auth";
 import { 
   LayoutDashboard, Users, Calendar, Clock, Activity, 
   Settings, LogOut, Menu, X, ChevronDown, Bell, Search, 
@@ -124,9 +125,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (role === "admin") navGroups = ADMIN_NAV;
   else if (role === "provider") navGroups = PROVIDER_NAV;
 
-  const handleLogout = () => {
-    dispatch(logoutAction());
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Backend logout failed:", error);
+    } finally {
+      dispatch(logoutAction());
+      router.push("/login");
+    }
   };
 
   return (

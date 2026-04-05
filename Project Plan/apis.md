@@ -8,9 +8,9 @@
 *   POST /api/v1/auth/reset-password (Reset Password)
 
 **Users**
-*   GET /api/v1/users (Read Users)                                 #OK
-*   POST /api/v1/users/ (Create User)
-*   GET /api/v1/users/{id} (Read User By Id)
+*   GET /api/v1/users (Read Users)                                  #OK
+*   POST /api/v1/users/ (Create User)                               #OK
+*   GET /api/v1/users/{id} (Read User By Id)                        #OK
 *   PUT /api/v1/users/{id} (Update User)                            #OK
 *   DELETE /api/v1/users/{id} (Delete User)                         #OK
 *   PATCH /api/v1/users/{id}/activate (Activate User)               #OK

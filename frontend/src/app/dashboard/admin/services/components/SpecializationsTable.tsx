@@ -35,62 +35,66 @@ interface SpecializationsTableProps {
 
 export function SpecializationsTable({ specializations, onEdit, onDelete }: SpecializationsTableProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm shadow-slate-100/50">
-      <div className="overflow-x-auto">
-        <Table>
+    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm shadow-slate-100/50 flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto no-scrollbar relative [scrollbar-width:thin] scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <Table className="w-full text-left border-collapse">
           <TableHeader className="bg-slate-50/95 backdrop-blur z-20 border-b border-slate-200 sticky top-0">
-            <TableRow className="hover:bg-transparent border-none">
-              <TableHead className="py-4 pl-8 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[400px]">Departmental Identity</TableHead>
-              <TableHead className="py-4 px-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Operational State</TableHead>
-              <TableHead className="py-4 pr-8 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Options</TableHead>
+            <TableRow className="hover:bg-transparent border-none h-8">
+              <TableHead className="py-0 pl-6 text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] leading-none w-[380px]">Departmental Identity</TableHead>
+              <TableHead className="py-0 px-6 text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] leading-none">Operational Registry</TableHead>
+              <TableHead className="py-0 pr-6 text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] text-right leading-none">Ops</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="divide-y divide-slate-50">
             {specializations.map((spec) => (
-              <TableRow key={spec.id} className="hover:bg-slate-50/50 border-b border-slate-50 last:border-b-0 transition-all group h-[72px]">
-                <TableCell className="py-4 pl-8">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center text-[12px] font-black uppercase shrink-0 shadow-sm transition-transform group-hover:scale-105">
-                       <Layers className="w-4 h-4 text-slate-400" />
+              <TableRow 
+                key={spec.id} 
+                className="hover:bg-slate-50/50 border-b border-slate-50 last:border-b-0 transition-all group h-[64px] cursor-pointer"
+                onClick={() => onEdit(spec)}
+              >
+                <TableCell className="py-3 pl-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110 duration-500">
+                       <Layers className="w-3.5 h-3.5 text-slate-400" />
                     </div>
-                    <div className="flex flex-col">
-                       <span className="text-[14px] font-bold text-slate-800 leading-tight uppercase tracking-tight">
+                    <div className="flex flex-col min-w-0">
+                       <span className="text-[12px] font-black text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors uppercase tracking-tight truncate">
                          {spec.name}
                        </span>
-                       <div className="flex items-center gap-1.5 mt-1">
+                       <div className="flex items-center gap-1 mt-1">
                           <Fingerprint className="w-2.5 h-2.5 text-slate-300" />
-                          <code className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                            DEP_ID_{spec.id}
+                          <code className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none">
+                            DEP_{spec.id}
                           </code>
                        </div>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="py-4 px-6">
-                   <div className="inline-flex items-center gap-2 bg-emerald-50 px-2.5 py-1 rounded-xl text-[10px] text-emerald-600 font-bold border border-emerald-100 uppercase tracking-widest">
-                      <Activity className="w-3 h-3 text-emerald-400" />
-                      Active Registry
+                <TableCell className="py-3 px-6">
+                   <div className="inline-flex items-center gap-2 bg-emerald-50/50 px-2 py-0.5 rounded-lg text-[9px] text-emerald-600 font-black border border-emerald-100/50 uppercase tracking-widest">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Active
                    </div>
                 </TableCell>
-                <TableCell className="py-4 pr-8 text-right">
+                <TableCell className="py-3 pr-6 text-right" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-100 rounded-xl group-hover:scale-105 transition-transform">
-                        <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                      <Button variant="ghost" size="sm" className="h-7 w-7 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+                        <MoreHorizontal className="w-3.5 h-3.5 text-slate-400" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44 p-2 rounded-xl shadow-xl border-slate-100">
+                    <DropdownMenuContent align="end" className="w-40 p-1.5 rounded-xl shadow-xl border-slate-100">
                       <DropdownMenuItem 
                         onClick={() => onEdit(spec)}
-                        className="gap-2.5 p-2.5 text-xs font-bold text-slate-700 hover:text-indigo-600 cursor-pointer rounded-lg transition-colors"
+                        className="gap-2 p-2 text-[11px] font-bold text-slate-700 hover:text-indigo-600 cursor-pointer rounded-lg transition-colors"
                       >
-                        <Edit2 className="w-3.5 h-3.5" /> Modify Listing
+                        <Edit2 className="w-3 h-3" /> Update Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => onDelete(spec)}
-                        className="gap-2.5 p-2.5 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer rounded-lg transition-colors"
+                        className="gap-2 p-2 text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 cursor-pointer rounded-lg transition-colors"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Decommission
+                        <Trash2 className="w-3 h-3" /> Decommission
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -99,11 +103,11 @@ export function SpecializationsTable({ specializations, onEdit, onDelete }: Spec
             ))}
             {specializations.length === 0 && (
                <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={3} className="py-32 text-center">
+                  <TableCell colSpan={3} className="py-24 text-center">
                      <div className="flex flex-col items-center justify-center gap-3">
-                        <Search className="w-10 h-10 text-slate-200" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                           No Specializations defined
+                        <Search className="w-8 h-8 text-slate-100" />
+                        <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                           Taxonomy Null
                         </p>
                      </div>
                   </TableCell>

@@ -118,16 +118,21 @@ export default function ServicesManagementPage() {
 
   return (
     <div className="h-full flex flex-col gap-6 animate-in fade-in duration-500">
-      <div className="shrink-0 px-1">
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-1">
-             <PageHeader 
-               breadcrumbs={["Home", "Admin", "Operations"]} 
-               title="Clinical Registry Management" 
-             />
-             <p className="text-xs font-semibold text-slate-500 max-w-2xl leading-relaxed mt-[-20px]">
-               Maintain the institutional registry of clinical services and departmental specializations. 
-               All modifications are reflected in real-time across patient scheduling and provider assignment workflows.
+      <div className="shrink-0">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
+          <div className="space-y-0 flex-1">
+             <div className="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-slate-300 mb-4">
+               <span>Admin</span>
+               <ArrowRight className="w-2.5 h-2.5 text-slate-200" />
+               <span>Operations</span>
+               <ArrowRight className="w-2.5 h-2.5 text-slate-200" />
+               <span className="text-indigo-600">Clinical Registry</span>
+             </div>
+             <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-3">
+               Clinical Infrastructure
+             </h1>
+             <p className="text-[11px] font-bold text-slate-400 max-w-2xl leading-relaxed uppercase tracking-widest">
+               Orchestrate the institutional hierarchy of healthcare assets and specialized departmental categories.
              </p>
           </div>
           
@@ -136,82 +141,80 @@ export default function ServicesManagementPage() {
               if (activeTab === "services") { setActiveService(null); setServiceDialogOpen(true); }
               else { setActiveSpec(null); setSpecDialogOpen(true); }
             }}
-            className="rounded-2xl bg-slate-900 hover:bg-black text-white h-11 px-6 gap-2 text-[11px] font-black uppercase tracking-widest shadow-xl shadow-slate-200 transition-all active:scale-95"
+            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-6 gap-2 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95 cursor-pointer"
           >
              <Plus className="w-4 h-4" />
-             {activeTab === "services" ? "Register Service" : "Add Discipline"}
+             {activeTab === "services" ? "Register Resource" : "Add Discipline"}
           </Button>
         </header>
 
-        {/* Modern Tab Navigation (Centered) */}
-        <div className="flex justify-center mt-6">
+        {/* Modern Tab Navigation (Integrated) */}
+        <div className="flex items-center gap-4 mt-8 px-1">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-fit">
-            <TabsList className="bg-slate-100/80 backdrop-blur p-1.5 rounded-2xl border border-slate-200">
+            <TabsList className="bg-slate-50/50 backdrop-blur-sm p-1 rounded-xl border border-slate-200/60 shadow-sm">
               <TabsTrigger 
                 value="services" 
-                className="rounded-xl px-6 py-2 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all"
+                className="rounded-lg px-6 py-1.5 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all cursor-pointer"
               >
                 <BriefcaseMedical className="w-3.5 h-3.5 mr-2" />
-                Services Registry
+                Resource Registry
               </TabsTrigger>
               <TabsTrigger 
                 value="specializations" 
-                className="rounded-xl px-6 py-2 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all"
+                className="rounded-lg px-6 py-1.5 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all cursor-pointer"
               >
                 <Layers className="w-3.5 h-3.5 mr-2" />
-                Medical Disciplines
+                Departmental Taxonomy
               </TabsTrigger>
             </TabsList>
           </Tabs>
+          
+          <div className="h-px bg-slate-100 grow" />
         </div>
       </div>
 
       {/* Conditional Content Rendering */}
-      <div className="flex-1 min-h-0 overflow-auto pb-12">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
-          <TabsContent value="services" className="m-0 h-full">
-            <div className="space-y-6 pt-4 animate-in slide-in-from-bottom-4 duration-500">
-               <div className="flex items-center gap-4 px-1">
-                 <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-100">
-                    <BriefcaseMedical className="w-5 h-5" />
-                 </div>
-                 <div>
-                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter leading-none">Clinical Assets</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center gap-2">
-                       <Activity className="w-3 h-3 text-emerald-500" />
-                       Operational Services Registry (Write-Enabled)
-                    </p>
-                 </div>
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+          <TabsContent value="services" className="m-0 flex-1 flex flex-col overflow-hidden outline-none data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:slide-in-from-bottom-2 duration-500">
+             <div className="flex items-center gap-3 px-1 mb-6 mt-4 shrink-0">
+               <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-100">
+                  <Activity className="w-4 h-4" />
                </div>
-               
-               <ServicesTable 
-                 services={services}
-                 onEdit={(s) => { setActiveService(s); setServiceDialogOpen(true); }}
-                 onDelete={(s) => { setDeleteTarget({ type: "service", data: s }); setDeleteDialogOpen(true); }}
-               />
-            </div>
+               <div>
+                  <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter leading-none">Operational Assets</h2>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                     Registry Status: Active / Read-Write
+                  </p>
+               </div>
+             </div>
+             
+             <ServicesTable 
+               services={services}
+               onEdit={(s) => { setActiveService(s); setServiceDialogOpen(true); }}
+               onDelete={(s) => { setDeleteTarget({ type: "service", data: s }); setDeleteDialogOpen(true); }}
+             />
           </TabsContent>
 
-          <TabsContent value="specializations" className="m-0 h-full">
-            <div className="space-y-6 pt-4 animate-in slide-in-from-bottom-4 duration-500">
-               <div className="flex items-center gap-4 px-1">
-                 <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-lg shadow-slate-200">
-                    <Layers className="w-5 h-5" />
-                 </div>
-                 <div>
-                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter leading-none">Departmental Taxonomy</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
-                       Manage institutional expertise categories and clinical routing flags
-                    </p>
-                 </div>
+          <TabsContent value="specializations" className="m-0 flex-1 flex flex-col overflow-hidden outline-none data-[state=active]:animate-in data-[state=active]:fade-in data-[state=active]:slide-in-from-bottom-2 duration-500">
+             <div className="flex items-center gap-3 px-1 mb-6 mt-4 shrink-0">
+               <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-lg shadow-slate-200">
+                  <Settings2 className="w-4 h-4" />
                </div>
-               
-               <SpecializationsTable 
-                 specializations={specializations}
-                 onEdit={(s) => { setActiveSpec(s); setSpecDialogOpen(true); }}
-                 onDelete={(s) => { setDeleteTarget({ type: "spec", data: s }); setDeleteDialogOpen(true); }}
-               />
-            </div>
+               <div>
+                  <h2 className="text-lg font-black text-slate-800 uppercase tracking-tighter leading-none">Disciplines Registry</h2>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">
+                     Institutional Expertise Mapping & Clinical Categories
+                  </p>
+               </div>
+             </div>
+             
+             <SpecializationsTable 
+               specializations={specializations}
+               onEdit={(s) => { setActiveSpec(s); setSpecDialogOpen(true); }}
+               onDelete={(s) => { setDeleteTarget({ type: "spec", data: s }); setDeleteDialogOpen(true); }}
+             />
           </TabsContent>
         </Tabs>
       </div>

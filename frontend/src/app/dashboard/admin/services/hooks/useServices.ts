@@ -6,13 +6,37 @@ import { toast } from "sonner";
 export function useServices() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [skip, setSkip] = useState(0);
+  const [limit, setLimit] = useState(15);
+  const [categories, setCategories] = useState<string[]>([]);
 
-  const fetchServices = useCallback(async () => {
+  const fetchServices = useCallback(async (params?: {
+    skip?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+    specialization_id?: string;
+    is_active?: boolean;
+  }) => {
     setLoading(true);
     try {
-      const res = await servicesApi.getServices();
+      const res = await servicesApi.getServices({
+        skip: params?.skip ?? 0,
+        limit: params?.limit ?? limit,
+        search: params?.search,
+        category: params?.category,
+        specialization_id: params?.specialization_id,
+        is_active: params?.is_active
+      });
+
       if (res.success) {
         setServices(res.data || []);
+        if (res.meta?.pagination) {
+          setTotal(res.meta.pagination.total);
+          setSkip(res.meta.pagination.skip);
+          setLimit(res.meta.pagination.limit);
+        }
       } else {
         toast.error(res.message || "Failed to fetch services");
       }
@@ -21,18 +45,24 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
+  }, [limit]);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await servicesApi.getCategories();
+      if (res.success) {
+        setCategories(res.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch service categories", error);
+    }
   }, []);
 
-  const createService = async (data: { 
-    name: string; 
-    duration_minutes: number; 
-    required_specialization_id: string;
-    is_active?: boolean;
-  }) => {
+  const createService = async (data: any) => {
     try {
       const res = await servicesApi.createService(data);
       if (res.success && res.data) {
-        setServices((prev) => [...prev, res.data!]);
+        fetchServices({ skip, limit });
         toast.success(`Service created: ${res.data.name}`);
         return res.data;
       } else {
@@ -48,9 +78,7 @@ export function useServices() {
     try {
       const res = await servicesApi.updateService(id, data);
       if (res.success && res.data) {
-        setServices((prev) =>
-          prev.map((s) => (s.id === id ? res.data! : s))
-        );
+        fetchServices({ skip, limit });
         toast.success("Service updated");
         return res.data;
       } else {
@@ -64,10 +92,9 @@ export function useServices() {
 
   const deleteService = async (id: string) => {
     try {
-      // Assuming delete endpoint exists based on implementation patterns
       const res = await servicesApi.deleteService(id);
       if (res.success) {
-        setServices((prev) => prev.filter((s) => s.id !== id));
+        fetchServices({ skip, limit });
         toast.success("Service deleted");
         return true;
       } else {
@@ -82,7 +109,12 @@ export function useServices() {
   return {
     services,
     loading,
+    total,
+    skip,
+    limit,
+    categories,
     fetchServices,
+    fetchCategories,
     createService,
     updateService,
     deleteService,

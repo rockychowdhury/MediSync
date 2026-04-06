@@ -10,7 +10,7 @@ from app.utils.response import APIResponse, ResponseMessages
 
 router = APIRouter()
 
-@router.get("/", response_model=list[SpecializationResponse])
+@router.get("", response_model=list[SpecializationResponse])
 def read_specializations(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
@@ -48,7 +48,7 @@ def read_specialization(
         data=SpecializationResponse.model_validate(specialization)
     )
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_specialization(
     *,
     request: Request,

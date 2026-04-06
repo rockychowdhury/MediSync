@@ -3,6 +3,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from fastapi.concurrency import run_in_threadpool
 
 from app.crud.crud_appointment import appointment as crud_appointment
 from app.crud.crud_activity_log import activity_log as crud_activity_log
@@ -32,7 +33,8 @@ class AppointmentService:
         """
         # 1. Validation & Conflict Detection
         try:
-            scheduling_service.check_conflicts(
+            await run_in_threadpool(
+                scheduling_service.check_conflicts,
                 db,
                 provider_id=obj_in.provider_id,
                 target_start=obj_in.appointment_start,
@@ -43,14 +45,14 @@ class AppointmentService:
             raise HTTPException(status_code=400, detail=f"Conflict: {e.message}")
 
         # 2. Database Insert wrapped in transaction
-        new_apt = crud_appointment.create_with_number(db, obj_in=obj_in)
+        new_apt = await run_in_threadpool(crud_appointment.create_with_number, db, obj_in=obj_in)
         
         # Emergency Priority handles status bypass logic
         # If it's an emergency, we immediately check them in
         if obj_in.priority == "emergency":
             new_apt.status = "checked_in"
             new_apt.checked_in_at = utcnow()
-            db.commit()
+            await run_in_threadpool(db.commit)
 
         # 3. Audit Log
         desc = f"Appointment {new_apt.appointment_number} created for patient {obj_in.patient_id}."
@@ -75,6 +77,7 @@ class AppointmentService:
             },
             ip_address=ip_address,
         )
+        await run_in_threadpool(db.commit) # Ensure committed
 
         # 4. Broadcasting
         await ws_manager.broadcast_multi(
@@ -142,8 +145,8 @@ class AppointmentService:
         elif new_status == "cancelled":
             db_apt.cancellation_reason = reason
 
-        db.commit()
-        db.refresh(db_apt)
+        await run_in_threadpool(db.commit)
+        await run_in_threadpool(db.refresh, db_apt)
 
         # Audit Log
         crud_activity_log.create(

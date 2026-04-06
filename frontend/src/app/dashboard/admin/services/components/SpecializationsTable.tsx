@@ -1,120 +1,155 @@
 "use client";
 
 import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { 
-  MoreHorizontal, 
-  Edit2, 
+  Edit3, 
   Trash2, 
   Search, 
   Layers,
-  Activity,
-  Fingerprint
+  Fingerprint,
+  Info
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Specialization } from "@/types/provider";
 
 interface SpecializationsTableProps {
   specializations: Specialization[];
+  loading: boolean;
   onEdit: (specialization: Specialization) => void;
   onDelete: (specialization: Specialization) => void;
+  onView?: (specialization: Specialization) => void;
 }
 
-export function SpecializationsTable({ specializations, onEdit, onDelete }: SpecializationsTableProps) {
+export function SpecializationsTable({ 
+  specializations, 
+  loading, 
+  onEdit, 
+  onDelete,
+  onView
+}: SpecializationsTableProps) {
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm shadow-slate-100/50 flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto no-scrollbar relative [scrollbar-width:thin] scrollbar-thumb-slate-200 scrollbar-track-transparent">
-        <Table className="w-full text-left border-collapse">
-          <TableHeader className="bg-slate-50/95 backdrop-blur z-20 border-b border-slate-200 sticky top-0">
-            <TableRow className="hover:bg-transparent border-none h-8">
-              <TableHead className="py-0 pl-6 text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] leading-none w-[380px]">Departmental Identity</TableHead>
-              <TableHead className="py-0 px-6 text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] leading-none">Operational Registry</TableHead>
-              <TableHead className="py-0 pr-6 text-[8.5px] font-black text-slate-400 uppercase tracking-[0.1em] text-right leading-none">Ops</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody className="divide-y divide-slate-50">
+    <div className="flex-1 min-h-0 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col animate-in fade-in duration-500 delay-150 relative">
+      <div 
+        ref={tableContainerRef}
+        className="flex-1 overflow-x-hidden overflow-y-auto no-scrollbar relative rounded-t-[inherit]"
+      >
+        <table className="w-full text-left border-collapse table-fixed">
+          <thead className="sticky rounded-2xl top-0 z-20 bg-slate-50/80 backdrop-blur-md">
+            <tr className="border-b border-slate-100 h-10">
+              <th className="px-4 py-0 text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Specialization</th>
+              <th className="px-4 py-0 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right leading-none w-[100px]">Ops</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
             {specializations.map((spec) => (
-              <TableRow 
-                key={spec.id} 
-                className="hover:bg-slate-50/50 border-b border-slate-50 last:border-b-0 transition-all group h-[64px] cursor-pointer"
-                onClick={() => onEdit(spec)}
-              >
-                <TableCell className="py-3 pl-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-110 duration-500">
-                       <Layers className="w-3.5 h-3.5 text-slate-400" />
+              <tr key={spec.id} className="hover:bg-slate-50/50 transition-all duration-300 group h-[52px]">
+                <td className="px-4 py-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0 border border-slate-800 group-hover:scale-110 transition-transform duration-500">
+                       <Layers className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex flex-col min-w-0">
-                       <span className="text-[12px] font-black text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors uppercase tracking-tight truncate">
+                       <span className="text-[12px] font-black text-slate-800 leading-none group-hover:text-indigo-600 transition-colors uppercase tracking-tight truncate">
                          {spec.name}
                        </span>
-                       <div className="flex items-center gap-1 mt-1">
-                          <Fingerprint className="w-2.5 h-2.5 text-slate-300" />
-                          <code className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none">
+                       <div className="flex items-center gap-1 mt-1.5">
+                          <Fingerprint className="w-2.5 h-2.5 text-slate-200" />
+                          <code className="text-[9px] font-black text-slate-200 uppercase tracking-widest leading-none truncate">
                             DEP_{spec.id}
                           </code>
                        </div>
                     </div>
                   </div>
-                </TableCell>
-                <TableCell className="py-3 px-6">
-                   <div className="inline-flex items-center gap-2 bg-emerald-50/50 px-2 py-0.5 rounded-lg text-[9px] text-emerald-600 font-black border border-emerald-100/50 uppercase tracking-widest">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Active
+                </td>
+                <td className="px-4 py-0 text-right">
+                   <div className="flex items-center justify-end gap-1 relative">
+                     <TooltipProvider>
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => onView?.(spec)}
+                            className="h-7 w-7 p-0 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-white transition-all"
+                           >
+                             <Info className="w-3 h-3" />
+                           </Button>
+                         </TooltipTrigger>
+                          <TooltipContent 
+                            collisionBoundary={tableContainerRef.current || undefined}
+                            className="bg-slate-900 text-white border-0 p-0 shadow-2xl rounded-2xl overflow-hidden max-w-[320px] w-auto"
+                          >
+                             <div className="flex items-stretch min-h-[80px]">
+                                <div className="w-[100px] p-3.5 bg-indigo-600 flex flex-col justify-between shrink-0">
+                                   <p className="font-black text-white uppercase tracking-[0.2em] text-[7px] opacity-80 leading-tight">
+                                     Taxonomy<br/>Identity
+                                   </p>
+                                   <h5 className="font-black text-white text-[11px] leading-tight mt-auto uppercase tracking-tight truncate">
+                                     {spec.name}
+                                   </h5>
+                                </div>
+                                <div className="flex-1 p-3.5 flex items-center bg-slate-900">
+                                   <p className="text-slate-300 font-bold leading-relaxed text-[10px]">
+                                     {spec.description || "Institutional expertise mapping and clinical categories."}
+                                   </p>
+                                </div>
+                             </div>
+                          </TooltipContent>
+                       </Tooltip>
+                     </TooltipProvider>
+
+                     <TooltipProvider>
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => onEdit(spec)}
+                            className="h-7 w-7 p-0 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-white transition-all"
+                           >
+                             <Edit3 className="w-3 h-3" />
+                           </Button>
+                         </TooltipTrigger>
+                         <TooltipContent className="bg-slate-900 text-white border-0 text-[10px] font-black uppercase tracking-widest px-3 py-1.5">Modify Discipline</TooltipContent>
+                       </Tooltip>
+                     </TooltipProvider>
+
+                     <TooltipProvider>
+                       <Tooltip>
+                         <TooltipTrigger asChild>
+                           <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => onDelete(spec)}
+                            className="h-7 w-7 p-0 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-white transition-all"
+                           >
+                             <Trash2 className="w-3 h-3" />
+                           </Button>
+                         </TooltipTrigger>
+                         <TooltipContent className="bg-slate-900 text-white border-0 text-[10px] font-black uppercase tracking-widest px-3 py-1.5">Decommission</TooltipContent>
+                       </Tooltip>
+                     </TooltipProvider>
                    </div>
-                </TableCell>
-                <TableCell className="py-3 pr-6 text-right" onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
-                        <MoreHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40 p-1.5 rounded-xl shadow-xl border-slate-100">
-                      <DropdownMenuItem 
-                        onClick={() => onEdit(spec)}
-                        className="gap-2 p-2 text-[11px] font-bold text-slate-700 hover:text-indigo-600 cursor-pointer rounded-lg transition-colors"
-                      >
-                        <Edit2 className="w-3 h-3" /> Update Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => onDelete(spec)}
-                        className="gap-2 p-2 text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 cursor-pointer rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-3 h-3" /> Decommission
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))}
             {specializations.length === 0 && (
-               <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={3} className="py-24 text-center">
+               <tr>
+                  <td colSpan={2} className="py-24 text-center">
                      <div className="flex flex-col items-center justify-center gap-3">
                         <Search className="w-8 h-8 text-slate-100" />
                         <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">
                            Taxonomy Null
                         </p>
                      </div>
-                  </TableCell>
-               </TableRow>
+                  </td>
+               </tr>
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   );

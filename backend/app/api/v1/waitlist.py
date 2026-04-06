@@ -3,6 +3,7 @@ from typing import Any, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, PermissionChecker
@@ -229,16 +230,17 @@ async def update_waitlist_entry(
     current_user: User = Depends(PermissionChecker(["waitlist:edit"])),
 ) -> Any:
     """Update waitlist entry metadata (priority, provider pref, etc)."""
-    db_obj = crud_waitlist.get(db, id=id)
+    db_obj = await run_in_threadpool(crud_waitlist.get, db, id=id)
     if not db_obj:
         raise HTTPException(status_code=404, detail="Waitlist entry not found")
     
     priority_changed = waitlist_in.priority is not None and waitlist_in.priority != db_obj.priority
     
-    entry = crud_waitlist.update(db, db_obj=db_obj, obj_in=waitlist_in)
+    entry = await run_in_threadpool(crud_waitlist.update, db, db_obj=db_obj, obj_in=waitlist_in)
     
     if priority_changed:
-        crud_waitlist.recalculate_queue_positions(db, service_id=entry.service_id)
+        await run_in_threadpool(crud_waitlist.recalculate_queue_positions, db, service_id=entry.service_id)
+        await run_in_threadpool(db.commit)
         # Broadcast queue update
         await ws_manager.broadcast(
             channel=f"waitlist:{entry.service_id}",

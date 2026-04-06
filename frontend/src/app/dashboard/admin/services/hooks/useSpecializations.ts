@@ -6,13 +6,30 @@ import { toast } from "sonner";
 export function useSpecializations() {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [skip, setSkip] = useState(0);
+  const [limit, setLimit] = useState(15);
 
-  const fetchSpecializations = useCallback(async () => {
+  const fetchSpecializations = useCallback(async (params?: {
+    skip?: number;
+    limit?: number;
+    search?: string;
+  }) => {
     setLoading(true);
     try {
-      const res = await specializationsApi.getSpecializations();
+      const res = await specializationsApi.getSpecializations({
+        skip: params?.skip ?? 0,
+        limit: params?.limit ?? limit,
+        search: params?.search
+      });
+
       if (res.success) {
         setSpecializations(res.data || []);
+        if (res.meta?.pagination) {
+          setTotal(res.meta.pagination.total);
+          setSkip(res.meta.pagination.skip);
+          setLimit(res.meta.pagination.limit);
+        }
       } else {
         toast.error(res.message || "Failed to fetch specializations");
       }
@@ -21,13 +38,13 @@ export function useSpecializations() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [limit]);
 
-  const createSpecialization = async (data: { name: string }) => {
+  const createSpecialization = async (data: { name: string, description?: string }) => {
     try {
       const res = await specializationsApi.createSpecialization(data);
       if (res.success && res.data) {
-        setSpecializations((prev) => [...prev, res.data!]);
+        fetchSpecializations({ skip, limit });
         toast.success(`Specialization created: ${res.data.name}`);
         return res.data;
       } else {
@@ -39,13 +56,11 @@ export function useSpecializations() {
     return null;
   };
 
-  const updateSpecialization = async (id: string, data: { name: string }) => {
+  const updateSpecialization = async (id: string, data: { name: string, description?: string }) => {
     try {
       const res = await specializationsApi.updateSpecialization(id, data);
       if (res.success && res.data) {
-        setSpecializations((prev) =>
-          prev.map((s) => (s.id === id ? res.data! : s))
-        );
+        fetchSpecializations({ skip, limit });
         toast.success("Specialization updated");
         return res.data;
       } else {
@@ -61,7 +76,7 @@ export function useSpecializations() {
     try {
       const res = await specializationsApi.deleteSpecialization(id);
       if (res.success) {
-        setSpecializations((prev) => prev.filter((s) => s.id !== id));
+        fetchSpecializations({ skip, limit });
         toast.success("Specialization deleted");
         return true;
       } else {
@@ -76,6 +91,9 @@ export function useSpecializations() {
   return {
     specializations,
     loading,
+    total,
+    skip,
+    limit,
     fetchSpecializations,
     createSpecialization,
     updateSpecialization,

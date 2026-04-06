@@ -51,11 +51,11 @@
 *   GET /api/v1/activity-logs/{id} (Read Activity Log)
 
 **Specializations**
-*   GET /api/v1/specializations/ (Read Specializations)
-*   POST /api/v1/specializations/ (Create Specialization)
+*   GET /api/v1/specializations/ (Read Specializations)                 #OK
+*   POST /api/v1/specializations/ (Create Specialization)               #OK
 *   GET /api/v1/specializations/{id} (Read Specialization)
-*   PUT /api/v1/specializations/{id} (Update Specialization)
-*   DELETE /api/v1/specializations/{id} (Delete Specialization)
+*   PUT /api/v1/specializations/{id} (Update Specialization)            #OK
+*   DELETE /api/v1/specializations/{id} (Delete Specialization)         #OK
 
 **Services**
 *   GET /api/v1/services (Read Services)

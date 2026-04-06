@@ -1,8 +1,9 @@
 export type ProviderStatus = "available" | "on_leave" | "busy";
 
 export interface Specialization {
-  id: string;
+  id: string | number;
   name: string;
+  description?: string;
 }
 
 export interface Provider {

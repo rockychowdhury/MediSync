@@ -3,6 +3,7 @@ from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from fastapi.concurrency import run_in_threadpool
 
 from app.crud.crud_waitlist import waitlist as crud_waitlist
 from app.crud.crud_appointment import appointment as crud_appointment
@@ -39,10 +40,10 @@ class WaitlistService:
             notes=notes,
         )
 
-        entry = crud_waitlist.create(db, obj_in=obj_in)
+        entry = await run_in_threadpool(crud_waitlist.create, db, obj_in=obj_in)
 
         # Audit Log
-        crud_activity_log.create(
+        await run_in_threadpool(crud_activity_log.create, 
             db,
             user_id=actor_id,
             action_type="waitlist_entry_added",
@@ -57,6 +58,7 @@ class WaitlistService:
             },
             ip_address=ip_address,
         )
+        await run_in_threadpool(db.commit)
 
         # Broadcast the new waitlist entry
         await ws_manager.broadcast_multi(
@@ -84,8 +86,9 @@ class WaitlistService:
             return
 
         old_position = entry.queue_position
-        crud_waitlist.update(db, db_obj=entry, obj_in={"status": "cancelled"})
-        crud_waitlist.recalculate_queue_positions(db, service_id=entry.service_id)
+        await run_in_threadpool(crud_waitlist.update, db, db_obj=entry, obj_in={"status": "cancelled"})
+        await run_in_threadpool(crud_waitlist.recalculate_queue_positions, db, service_id=entry.service_id)
+        await run_in_threadpool(db.commit)
 
         # Audit Log
         crud_activity_log.create(
@@ -163,12 +166,13 @@ class WaitlistService:
                     created_by="system",
                 )
 
-                new_apt = crud_appointment.create_with_number(db, obj_in=apt_in)
+                new_apt = await run_in_threadpool(crud_appointment.create_with_number, db, obj_in=apt_in)
                 new_apt.assigned_from_waitlist = True
-                db.commit()
+                await run_in_threadpool(db.commit)
 
                 # Update Waitlist Entry
-                crud_waitlist.update(
+                await run_in_threadpool(
+                    crud_waitlist.update,
                     db,
                     db_obj=entry,
                     obj_in={
@@ -179,7 +183,8 @@ class WaitlistService:
                 )
 
                 # Recalculate positions
-                crud_waitlist.recalculate_queue_positions(db, service_id=service_id)
+                await run_in_threadpool(crud_waitlist.recalculate_queue_positions, db, service_id=service_id)
+                await run_in_threadpool(db.commit)
 
                 # Audit Log for auto-promotion
                 crud_activity_log.create(

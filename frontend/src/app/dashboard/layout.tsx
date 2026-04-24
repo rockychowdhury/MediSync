@@ -16,6 +16,8 @@ import Image from "next/image";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import MediSyncLogo from "@/components/common/MediSyncLogo";
+import { ReceptionistWSProvider } from "@/components/dashboard/receptionist/ReceptionistWSProvider";
+import { FloatingBookButton } from "@/components/dashboard/receptionist/FloatingBookButton";
 
 interface NavItem {
   name: string;
@@ -294,7 +296,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Fully bound the nested wrappers to 100% available viewport height */}
             <div className="max-w-[1400px] w-full h-full mx-auto relative isolate pt-2">
               <TooltipProvider>
-                {children}
+                {role === "receptionist" ? (
+                  <ReceptionistWSProvider>
+                    {children}
+                    <FloatingBookButton />
+                  </ReceptionistWSProvider>
+                ) : (
+                  children
+                )}
               </TooltipProvider>
             </div>
 

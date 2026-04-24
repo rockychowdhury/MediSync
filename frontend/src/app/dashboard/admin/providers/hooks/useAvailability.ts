@@ -10,7 +10,7 @@ export function useAvailability(providerId: string | null) {
     if (!providerId) return;
     setLoading(true);
     try {
-      const response = await availabilityApi.getAvailability(providerId);
+      const response = await availabilityApi.getProviderAvailability(providerId);
       if (response.success) {
         setAvailability(response.data || []);
       }

@@ -82,11 +82,11 @@ export const useBooking = (onSuccess?: () => void) => {
   }, []);
 
   const updateBookingData = (data: Partial<typeof bookingData>) => {
-    setBookingData(prev => ({ ...prev, ...data }));
+    setBookingData((prev: any) => ({ ...prev, ...data }));
   };
 
-  const nextStep = () => setStep(prev => Math.min(prev + 1, 4));
-  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+  const nextStep = () => setStep((prev: number) => Math.min(prev + 1, 4));
+  const prevStep = () => setStep((prev: number) => Math.max(prev - 1, 1));
 
   const confirmBooking = async () => {
     setSubmitting(true);

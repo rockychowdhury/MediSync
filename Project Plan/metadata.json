@@ -1,0 +1,14 @@
+{
+  "title": "MediSync — Complete Project Architecture",
+  "summary": "Comprehensive architectural reference for the MediSync healthcare scheduling platform. Covers the FastAPI backend (auth, RBAC, services, models, CRUD, WebSocket, middleware), the Next.js 16 frontend (Redux, API clients, routing, shadcn/ui), database schema (14 tables with relationships), all API endpoints (auth, CRUD, dashboard analytics, waitlist queue), environment configuration, and project plan documentation inventory. Includes known issues and a quick-reference file location guide.",
+  "created_at": "2026-04-24T17:09:00Z",
+  "updated_at": "2026-04-24T17:09:00Z",
+  "references": [
+    {
+      "type": "conversation",
+      "id": "e68ca51b-aa67-49fe-be02-7b87964f0d81",
+      "description": "Full codebase audit session — backend, frontend, project plan analysis"
+    }
+  ],
+  "tags": ["architecture", "backend", "frontend", "database", "api", "auth", "medisync"]
+}

@@ -67,7 +67,7 @@ export function ListView({
   };
 
   const toggleSelect = (id: string) => {
-    setSelectedIds(prev => 
+    setSelectedIds((prev: string[]) => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };

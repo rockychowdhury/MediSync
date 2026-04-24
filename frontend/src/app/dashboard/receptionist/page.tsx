@@ -1,99 +1,157 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
-import { PageHeader } from "@/components/dashboard/ui/PageHeader";
-import { DashboardCard, MetricCard } from "@/components/dashboard/ui/DashboardCard";
-import { Loader2, Plus, Clock, Activity, CheckCircle2 } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { format } from "date-fns";
+import { appointmentsApi } from "@/lib/api/appointments";
+import { providersApi } from "@/lib/api/providers";
+import { DashboardCard } from "@/components/dashboard/ui/DashboardCard";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+// Components
+import { TodayHeader } from "./components/TodayHeader";
+import { ProviderSubTabs } from "./components/ProviderSubTabs";
+import { QueueTable } from "./components/QueueTable";
+import { TodaySidebar } from "./components/TodaySidebar";
+import { SkeletonRows } from "@/components/dashboard/receptionist/SkeletonRows";
+import type { Appointment } from "@/types/appointment";
 
 export default function ReceptionistQueuePage() {
-  const user = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState('all');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [providers, setProviders] = useState<any[]>([]);
+  const [activeProviderId, setActiveProviderId] = useState("all");
 
-  const stats = { scheduled: 45, checked_in: 12, in_progress: 3, completed: 28 };
-  const providers = [ { id: 'all', label: 'All' }, { id: '1', label: 'Dr. Jenkins' }, { id: '2', label: 'Dr. Chen' } ];
-  const queue = Array.from({length: 12}).map((_, i) => ({
-    id: i, time: "09:00 AM", patient: "James Collins " + i, service: "Checkup", duration: "30m", status: i < 3 ? "completed" : i === 3 ? "in_progress" : i < 6 ? "checked_in" : "scheduled", provider_id: i % 2 === 0 ? '1' : '2'
-  }));
+  const [stats, setStats] = useState({
+    scheduled: 0,
+    checked_in: 0,
+    in_progress: 0,
+    completed: 0,
+  });
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 300);
-    return () => clearTimeout(timer);
+  const fetchData = useCallback(async () => {
+    try {
+      const today = format(new Date(), "yyyy-MM-dd");
+      
+      // Fetch appointments for today
+      const aptsRes = await appointmentsApi.getAppointments({ date: today, page_size: 1000 });
+      if (aptsRes.success) {
+        setAppointments(aptsRes.data);
+        
+        // Calculate stats
+        const newStats = { scheduled: 0, checked_in: 0, in_progress: 0, completed: 0 };
+        aptsRes.data.forEach((apt: Appointment) => {
+          if (apt.status === "scheduled") newStats.scheduled++;
+          else if (apt.status === "checked_in") newStats.checked_in++;
+          else if (apt.status === "in_progress") newStats.in_progress++;
+          else if (apt.status === "completed") newStats.completed++;
+        });
+        setStats(newStats);
+      }
+
+      // Fetch providers
+      const provRes = await providersApi.getProviders();
+      if (provRes.success) {
+        // We also need capacity for each provider
+        // Assuming there is an endpoint or we can use the dashboard one
+        // Fallback: mock capacity for now if endpoint isn't wired
+        const providersWithCapacity = provRes.data.map((p: any) => ({
+          provider_id: p.id,
+          name: p.full_name,
+          current_load: 0, // Would fetch from capacity endpoint
+          max_capacity: p.daily_capacity || 8
+        }));
+        
+        // Let's filter to only those who have appointments today
+        const activeProviderIds = new Set(aptsRes.data.map((a: Appointment) => a.provider_id));
+        const activeProviders = providersWithCapacity.filter((p: any) => activeProviderIds.has(p.provider_id));
+        
+        setProviders(activeProviders);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load queue data");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  if (loading) return <div className="flex justify-center items-center h-full"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>;
-  const filteredQueue = activeSubTab === 'all' ? queue : queue.filter(q => q.provider_id === activeSubTab);
+  useEffect(() => {
+    fetchData();
+    // In a full implementation, we'd wire up useWebSocket here
+  }, [fetchData]);
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      // Optimistic update
+      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: newStatus as any } : a));
+      
+      const res = await appointmentsApi.updateStatus(id, newStatus);
+      if (res.success) {
+        toast.success(`Appointment status updated to ${newStatus}`);
+        fetchData(); // Refresh to ensure sync
+      }
+    } catch (e) {
+      toast.error("Failed to update status");
+      fetchData(); // Revert on failure
+    }
+  };
+
+  const handleCancel = async (id: string) => {
+    // This should open a modal, but for now we'll do a simple confirm prompt
+    // until we implement the Cancel Dialog
+    const reason = window.prompt("Reason for cancellation?");
+    if (!reason) return;
+    
+    try {
+      const res = await appointmentsApi.updateStatus(id, "cancelled", reason);
+      if (res.success) {
+        toast.success("Appointment cancelled");
+        fetchData();
+      }
+    } catch (e) {
+      toast.error("Failed to cancel appointment");
+    }
+  };
+
+  const filteredAppointments = activeProviderId === "all" 
+    ? appointments 
+    : appointments.filter(a => a.provider_id === activeProviderId);
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in duration-500">
-      
-      <div className="shrink-0 mb-4">
-        <PageHeader 
-          breadcrumbs={["Home", "Reception", "Queue"]} 
-          title={new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date())} 
-          actionContent={
-            <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[14px] font-bold shadow-md shadow-blue-500/20 hover:bg-blue-700">
-              <Plus className="w-4 h-4" /><span>Walk-In Booking</span>
-            </button>
-          }
-        />
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 mt-2">
-          <MetricCard title="Scheduled" value={stats.scheduled} />
-          <MetricCard title="Checked In" value={stats.checked_in} />
-          <MetricCard title="In Progress" value={stats.in_progress} />
-          <MetricCard title="Completed" value={stats.completed} />
-        </div>
+    <div className="h-full flex flex-col animate-in fade-in duration-500 pb-12">
+      <div className="shrink-0 mb-6">
+        <TodayHeader stats={stats} />
       </div>
 
-      <DashboardCard className="mt-2 flex-1 min-h-0 flex flex-col p-0">
-        <div className="flex border-b border-slate-100 shrink-0 px-2 bg-[#fdfdfd]">
-          {providers.map(provider => (
-            <button
-              key={provider.id}
-              onClick={() => setActiveSubTab(provider.id)}
-              className={`px-5 py-3 text-[13px] font-bold border-b-[3px] transition-colors whitespace-nowrap ${
-                activeSubTab === provider.id ? "border-blue-600 text-blue-700" : "border-transparent text-slate-500"
-              }`}
-            >
-              {provider.label}
-            </button>
-          ))}
-        </div>
-        
-        <div className="flex-1 min-h-0 overflow-y-auto hidden-scrollbar">
-          <table className="w-full text-[13px]">
-            <thead className="sticky top-0 bg-white shadow-sm z-10">
-              <tr className="border-b border-slate-100">
-                <th className="text-left py-3 px-6 font-bold text-slate-400 uppercase text-[11px] bg-white">Time</th>
-                <th className="text-left py-3 px-6 font-bold text-slate-400 uppercase text-[11px] bg-white">Patient</th>
-                <th className="text-left py-3 px-6 font-bold text-slate-400 uppercase text-[11px] bg-white">Status</th>
-                <th className="text-right py-3 px-6 font-bold text-slate-400 uppercase text-[11px] bg-white">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredQueue.map(appt => (
-                <tr key={appt.id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                  <td className="py-3 px-6 font-bold text-slate-700">{appt.time}</td>
-                  <td className="py-3 px-6 font-bold text-slate-900">{appt.patient}</td>
-                  <td className="py-3 px-6">
-                    {appt.status === 'scheduled' && <span className="px-2 py-1 rounded text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Scheduled</span>}
-                    {appt.status === 'checked_in' && <span className="px-2 py-1 rounded text-[11px] font-bold bg-blue-50 text-blue-700 flex items-center w-max"><Clock className="w-3 h-3 mr-1"/>Checked In</span>}
-                    {appt.status === 'in_progress' && <span className="px-2 py-1 rounded text-[11px] font-bold bg-amber-50 text-amber-700 flex items-center w-max"><Activity className="w-3 h-3 mr-1 animate-pulse"/>In Progress</span>}
-                    {appt.status === 'completed' && <span className="px-2 py-1 rounded text-[11px] font-bold bg-green-50 text-green-700 flex items-center w-max"><CheckCircle2 className="w-3 h-3 mr-1"/>Done</span>}
-                  </td>
-                  <td className="py-3 px-6 text-right space-x-1 whitespace-nowrap">
-                    {appt.status === 'scheduled' && <button className="text-[11px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded hover:bg-blue-100">Check In</button>}
-                    {appt.status === 'checked_in' && <button className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded hover:bg-indigo-100">Start</button>}
-                    {appt.status === 'in_progress' && <button className="text-[11px] font-bold text-green-600 bg-green-50 border border-green-100 px-2.5 py-1 rounded hover:bg-green-100">Complete</button>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </DashboardCard>
+      <div className="flex flex-1 gap-6 min-h-0">
+        <DashboardCard className="flex-1 flex flex-col p-0 min-w-0">
+          <ProviderSubTabs 
+            providers={providers} 
+            activeProviderId={activeProviderId} 
+            onSelect={setActiveProviderId} 
+          />
+          
+          <div className="flex-1 overflow-y-auto hidden-scrollbar bg-white">
+            {loading ? (
+              <div className="p-4">
+                <SkeletonRows rows={8} />
+              </div>
+            ) : (
+              <QueueTable 
+                appointments={filteredAppointments}
+                showProviderColumn={activeProviderId === "all"}
+                onStatusChange={handleStatusChange}
+                onCancel={handleCancel}
+                onReschedule={(id) => toast.info("Reschedule flow not yet implemented")}
+                onViewDetails={(id) => toast.info("Detail drawer not yet implemented")}
+              />
+            )}
+          </div>
+        </DashboardCard>
+
+        {/* Sidebar only visible on xl screens */}
+        <TodaySidebar />
+      </div>
     </div>
   );
 }

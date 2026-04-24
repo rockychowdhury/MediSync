@@ -12,11 +12,14 @@ export type AppointmentPriority = "standard" | "urgent" | "emergency";
 export interface Appointment {
   id: string;
   appointment_number?: string;
+  patient_id?: string;
   patient_name: string;
   patient_phone: string;
   patient_email?: string;
   service_id: string;
   service_name?: string;
+  duration_minutes?: number;
+  buffer_time_minutes?: number;
   provider_id?: string;
   provider_name?: string;
   appointment_date: string;
@@ -26,6 +29,10 @@ export interface Appointment {
   priority: AppointmentPriority;
   notes?: string;
   cancellation_reason?: string;
+  checked_in_at?: string | null;
+  completed_at?: string | null;
+  assigned_from_waitlist?: boolean;
+  created_by_name?: string;
   created_at: string;
   updated_at: string;
 }

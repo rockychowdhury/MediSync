@@ -61,12 +61,12 @@ export const useAppointments = (initialFilters: any = {}) => {
   }, [fetchStats]);
 
   const updateFilters = (newFilters: any) => {
-    setFilters(prev => ({ ...prev, ...newFilters, skip: 0 }));
+    setFilters((prev: any) => ({ ...prev, ...newFilters, skip: 0 }));
     // Optional: Sync with URL
   };
 
   const handlePageChange = (newSkip: number) => {
-    setFilters(prev => ({ ...prev, skip: newSkip }));
+    setFilters((prev: any) => ({ ...prev, skip: newSkip }));
   };
 
   return {

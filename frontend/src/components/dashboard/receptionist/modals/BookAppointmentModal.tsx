@@ -200,18 +200,18 @@ export function BookAppointmentModal({
         </div>
         
         {/* Stepper */}
-        <div className="px-8 py-5 bg-slate-50/50 border-b border-slate-100 shrink-0">
+        <div className="px-8 pt-5 pb-4 bg-slate-50/50 border-b border-slate-100 shrink-0">
           <div className="flex items-center justify-between max-w-md mx-auto relative">
             {/* Connecting Line Background */}
-            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200" />
+            <div className="absolute left-0 right-0 top-4 -translate-y-1/2 h-0.5 bg-slate-200" />
             {/* Connecting Line Active */}
             <div 
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-blue-600 transition-all duration-500" 
-              style={{ width: `${((step - 1) / 3) * 100}%` }}
+              className="absolute left-0 h-0.5 bg-blue-600 transition-all duration-500 -translate-y-1/2" 
+              style={{ width: `${((step - 1) / 3) * 100}%`, top: "16px" }}
             />
             
             {[1,2,3,4].map(s => (
-              <div key={s} className="relative z-10 flex flex-col items-center">
+              <div key={s} className="relative z-10 flex flex-col items-center gap-1.5">
                 <div className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all duration-300 shadow-sm border-2",
                   step === s ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100 scale-105" : 
@@ -221,7 +221,7 @@ export function BookAppointmentModal({
                   {step > s ? <CheckCircle2 className="w-4 h-4 stroke-[3]" /> : s}
                 </div>
                 <span className={cn(
-                  "absolute -bottom-6 text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-300 hidden sm:block",
+                  "text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-300 hidden sm:block",
                   step >= s ? "text-slate-800" : "text-slate-400"
                 )}>
                   {s === 1 ? "Patient" : s === 2 ? "Service" : s === 3 ? "Time" : "Confirm"}
@@ -229,8 +229,6 @@ export function BookAppointmentModal({
               </div>
             ))}
           </div>
-          {/* Extra spacer for absolute bottom labels */}
-          <div className="h-4 hidden sm:block" />
         </div>
 
         {/* Content */}

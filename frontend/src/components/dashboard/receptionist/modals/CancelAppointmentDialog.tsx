@@ -49,9 +49,9 @@ export function CancelAppointmentDialog({
 
   return (
     <>
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] transition-opacity" onClick={onClose} />
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[120] transition-opacity" onClick={onClose} />
       
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl z-[70] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl z-[130] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-lg font-black text-slate-900">Cancel Appointment</h2>
           <button onClick={onClose} className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">

@@ -294,7 +294,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Dynamic Page Content Render */}
           <main className="flex-1 overflow-y-auto px-6 lg:px-10 pb-6 w-full custom-scrollbar">
             {/* Fully bound the nested wrappers to 100% available viewport height */}
-            <div className="max-w-[1400px] w-full h-full mx-auto relative isolate pt-2">
+            <div className="max-w-[1400px] w-full h-full mx-auto relative pt-2">
               <TooltipProvider>
                 {role === "receptionist" ? (
                   <ReceptionistWSProvider>

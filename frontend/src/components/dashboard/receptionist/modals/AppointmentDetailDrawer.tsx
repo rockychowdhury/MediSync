@@ -67,9 +67,9 @@ export function AppointmentDetailDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50 transition-opacity" onClick={onClose} />
+      <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[100] transition-opacity" onClick={onClose} />
       
-      <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-2xl z-[60] transform transition-transform duration-300 flex flex-col overflow-hidden animate-in slide-in-from-right">
+      <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-2xl z-[110] transform transition-transform duration-300 flex flex-col overflow-hidden animate-in slide-in-from-right">
         
         {loading || !appointment ? (
           <div className="flex-1 flex items-center justify-center">

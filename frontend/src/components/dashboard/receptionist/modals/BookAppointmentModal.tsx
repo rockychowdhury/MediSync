@@ -81,6 +81,12 @@ export function BookAppointmentModal({
     }
   };
 
+  // Fetch services and providers ONCE on initial mount to prevent mid-animation render blocks
+  useEffect(() => {
+    servicesApi.getServices().then(r => { if (r.success) setServices(r.data); });
+    providersApi.getProviders().then(r => { if (r.success) setProviders(r.data); });
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -98,8 +104,6 @@ export function BookAppointmentModal({
       if (!prefillServiceId) setService(null);
       setPriority("standard"); setAutoAssign(true); setProvider(null);
       setTimeSlot(null); setDate(format(new Date(), "yyyy-MM-dd")); setSlots([]);
-      servicesApi.getServices().then(r => { if (r.success) setServices(r.data); });
-      providersApi.getProviders().then(r => { if (r.success) setProviders(r.data); });
     }
   }, [isOpen, prefillPatientId, prefillServiceId]);
 
@@ -175,17 +179,20 @@ export function BookAppointmentModal({
     } finally { setLoading(false); }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <>
+    <div className={cn("fixed inset-0 z-[100] flex items-center justify-center transition-all duration-300", isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none")}>
       <div 
-        className="fixed inset-0 bg-slate-950/45 backdrop-blur-[1.5px] z-[100] animate-in fade-in duration-250 ease-out will-change-[opacity]" 
+        className="fixed inset-0 bg-slate-950/45 backdrop-blur-[1.5px] transition-opacity duration-300" 
         onClick={onClose} 
       />
       <div 
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform-gpu w-full max-w-2xl min-h-[600px] max-h-[600px] bg-white rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] z-[100] flex flex-col overflow-hidden animate-in zoom-in-[97%] duration-300 cubic-bezier(0.16, 1, 0.3, 1) will-change-[transform,opacity] border border-slate-100/50"
+        className={cn(
+          "relative transform-gpu w-full max-w-2xl h-[620px] bg-white rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] z-10 flex flex-col overflow-hidden transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) will-change-[transform,opacity] border border-slate-100/50",
+          isOpen ? "scale-100 opacity-100 translate-y-0" : "scale-97 opacity-0 translate-y-4"
+        )}
       >
+        {isOpen && (
+          <>
         {/* Header */}
         <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white relative z-10 shrink-0">
           <div>
@@ -232,7 +239,7 @@ export function BookAppointmentModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 overflow-y-auto hidden-scrollbar flex-1 min-h-[380px] max-h-[380px] bg-white">
+        <div className="p-8 overflow-y-auto hidden-scrollbar flex-grow min-h-0 bg-white">
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in duration-200 ease-out will-change-[opacity] min-h-[315px] flex flex-col justify-between">
               <div className="space-y-4">
@@ -624,7 +631,9 @@ export function BookAppointmentModal({
             </button>
           )}
         </div>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 }

@@ -50,10 +50,12 @@ export function AppointmentDetailDrawer({
     if (!appointment) return;
     setSavingNotes(true);
     try {
-      // Assuming an update notes endpoint exists, or passing through update status
-      // await appointmentsApi.updateAppointment(appointment.id, { notes });
-      await new Promise(r => setTimeout(r, 500));
-      toast.success("Notes saved");
+      // Backend does not yet expose a dedicated notes update endpoint.
+      // For now, we persist optimistically in the UI and log the intent.
+      // TODO: Wire to PUT /appointments/{id}/notes when backend adds it.
+      console.info(`[Notes] Would save notes for appointment ${appointment.id}:`, notes);
+      await new Promise(r => setTimeout(r, 300)); // Brief delay for UX feedback
+      toast.success("Notes saved locally");
     } catch (e) {
       toast.error("Failed to save notes");
     } finally {

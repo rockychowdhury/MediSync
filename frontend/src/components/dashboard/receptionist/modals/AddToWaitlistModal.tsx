@@ -52,7 +52,7 @@ export function AddToWaitlistModal({ isOpen, onClose, onSuccess }: AddToWaitlist
       };
       if (providerId) payload.preferred_provider_id = providerId;
       
-      const res = await waitlistApi.addWaitlistEntry(payload);
+      const res = await waitlistApi.addToWaitlist(payload);
       if (res.success) {
         toast.success("Added to waitlist");
         onSuccess();

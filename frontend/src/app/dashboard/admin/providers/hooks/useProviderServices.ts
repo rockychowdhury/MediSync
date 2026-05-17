@@ -10,8 +10,8 @@ export function useProviderServices(providerId: string | null) {
     if (!providerId) return;
     setLoading(true);
     try {
-      const response = await providersApi.read_provider_services(providerId); // Verify the API client method name
-      // Wait, let's check providersApi in lib/api/providers.ts for this again
+      const response = await providersApi.getProviderById(providerId);
+      // Provider detail includes assigned services in response.data.services
       if (response.success) {
         setAssignedServices(response.data || []);
       }

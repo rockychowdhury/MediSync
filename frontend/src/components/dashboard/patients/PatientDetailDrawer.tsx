@@ -164,7 +164,7 @@ export function PatientDetailDrawer({
                     <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</Label>
                     <Input 
                       value={formData.name}
-                      onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+                      onChange={(e) => setFormData((p: any) => ({ ...p, name: e.target.value }))}
                       className="h-11 rounded-xl border-slate-200 font-semibold focus:shadow-md transition-all text-slate-700"
                     />
                   </div>
@@ -174,7 +174,7 @@ export function PatientDetailDrawer({
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Contact Email</Label>
                       <Input 
                         value={formData.email}
-                        onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
+                        onChange={(e) => setFormData((p: any) => ({ ...p, email: e.target.value }))}
                         className="h-11 rounded-xl border-slate-200 font-semibold text-slate-600 text-sm"
                       />
                     </div>
@@ -182,7 +182,7 @@ export function PatientDetailDrawer({
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone Link</Label>
                       <Input 
                         value={formData.phone}
-                        onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
+                        onChange={(e) => setFormData((p: any) => ({ ...p, phone: e.target.value }))}
                         className="h-11 rounded-xl border-slate-200 font-semibold text-slate-600 text-sm"
                       />
                     </div>

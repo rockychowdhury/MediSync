@@ -134,12 +134,12 @@ export function PatientDetailDrawer({
                 
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <Field label="Full Name" value={formData.name} editable={isEditing} onChange={v => setFormData({...formData, name: v})} />
-                    <Field label="Date of Birth" value={formData.date_of_birth} editable={isEditing} type="date" onChange={v => setFormData({...formData, date_of_birth: v})} />
+                    <Field label="Full Name" value={formData.name} editable={isEditing} onChange={(v: any) => setFormData({...formData, name: v})} />
+                    <Field label="Date of Birth" value={formData.date_of_birth} editable={isEditing} type="date" onChange={(v: any) => setFormData({...formData, date_of_birth: v})} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <Field label="Phone" value={formData.phone} editable={isEditing} onChange={v => setFormData({...formData, phone: v})} />
-                    <Field label="Email" value={formData.email} editable={isEditing} type="email" onChange={v => setFormData({...formData, email: v})} />
+                    <Field label="Phone" value={formData.phone} editable={isEditing} onChange={(v: any) => setFormData({...formData, phone: v})} />
+                    <Field label="Email" value={formData.email} editable={isEditing} type="email" onChange={(v: any) => setFormData({...formData, email: v})} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">

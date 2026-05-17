@@ -39,7 +39,7 @@ export function useProviderDetail(providerId: string | null) {
     try {
       const response = await providersApi.updateProviderStatus(providerId, status);
       if (response.success) {
-          setProvider(prev => ({ ...prev, status }));
+          setProvider((prev: any) => ({ ...prev, status }));
           toast.success(`Provider presence set to ${status}`);
       }
     } catch (error) {

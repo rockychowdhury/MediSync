@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { waitlistApi } from "@/lib/api/waitlist";
 import { appointmentsApi } from "@/lib/api/appointments";
+import { dashboardApi } from "@/lib/api/dashboard";
 import { DashboardCard } from "@/components/dashboard/ui/DashboardCard";
 import { CapacityBar } from "@/components/dashboard/receptionist/CapacityBar";
 import { StatusBadge } from "@/components/dashboard/receptionist/StatusBadge";
@@ -25,10 +26,9 @@ export function TodaySidebar() {
           setWaitlistTotal(waitlistRes.meta.pagination.total);
         }
 
-        // Fetch all providers capacities (for simplicity here we can just fetch providers and map over them, or if there's a bulk endpoint)
-        // Note: Admin dashboard uses dashboardApi.getProviderUtilisation(), which we can use here!
-        const utilRes = await fetch("/api/v1/dashboard/provider-utilisation").then(res => res.json());
-        if (utilRes.success) {
+        // Fetch all providers capacities via the dashboard API client
+        const utilRes = await dashboardApi.getProviderUtilisation().catch(() => null);
+        if (utilRes?.success) {
           setProviders(utilRes.data.providers);
         }
       } catch (e) {

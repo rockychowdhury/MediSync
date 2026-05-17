@@ -219,7 +219,7 @@ export function ProviderDetailDrawer({
                                  <Input 
                                    type="number"
                                    value={formData.max_daily_appointments}
-                                   onChange={(e) => setFormData(p => ({ ...p, max_daily_appointments: e.target.value }))}
+                                   onChange={(e) => setFormData((p: any) => ({ ...p, max_daily_appointments: e.target.value }))}
                                    className="h-11 rounded-xl border-slate-200 font-bold bg-slate-50/30 focus:bg-white focus:shadow-md transition-all text-slate-700"
                                  />
                                </div>
@@ -227,7 +227,7 @@ export function ProviderDetailDrawer({
                                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Specialization Role</Label>
                                  <Select 
                                     value={formData.specialization_id}
-                                    onValueChange={(val: string) => setFormData(p => ({ ...p, specialization_id: val }))}
+                                    onValueChange={(val: string) => setFormData((p: any) => ({ ...p, specialization_id: val }))}
                                  >
                                    <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-slate-50/30 focus:bg-white font-bold text-slate-700">
                                       <SelectValue />
@@ -249,7 +249,7 @@ export function ProviderDetailDrawer({
                                  <Input 
                                    type="number"
                                    value={formData.consultation_fee}
-                                   onChange={(e) => setFormData(p => ({ ...p, consultation_fee: e.target.value }))}
+                                   onChange={(e) => setFormData((p: any) => ({ ...p, consultation_fee: e.target.value }))}
                                    className="h-11 rounded-xl border-slate-200 font-bold bg-slate-50/30 focus:bg-white transition-all text-slate-700"
                                  />
                                </div>
@@ -257,7 +257,7 @@ export function ProviderDetailDrawer({
                                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Status</Label>
                                  <Select 
                                     value={formData.status}
-                                    onValueChange={(val: string) => setFormData(p => ({ ...p, status: val }))}
+                                    onValueChange={(val: string) => setFormData((p: any) => ({ ...p, status: val }))}
                                  >
                                    <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-slate-50/30 focus:bg-white font-bold text-slate-700">
                                       <SelectValue />

@@ -189,7 +189,7 @@ export function PromoteUserModal({
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] ml-1">Clinical Title</Label>
                       <Select 
                         value={formData.specialization_id}
-                        onValueChange={(val) => setFormData(p => ({ ...p, specialization_id: val }))}
+                        onValueChange={(val) => setFormData((p: any) => ({ ...p, specialization_id: val }))}
                       >
                         <SelectTrigger className="h-11 rounded-2xl border-slate-200 bg-white focus:ring-blue-500 font-bold text-slate-700">
                           <SelectValue placeholder="Identify Role" />
@@ -205,8 +205,8 @@ export function PromoteUserModal({
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] ml-1">Consultation Yield</Label>
                       <Input 
                         type="number"
-                        value={formData.consultation_yield}
-                        onChange={(e) => setFormData(p => ({ ...p, consultation_yield: e.target.value }))}
+                        value={formData.consultation_fee}
+                        onChange={(e) => setFormData((p: any) => ({ ...p, consultation_fee: e.target.value }))}
                         className="h-11 rounded-2xl border-slate-200 bg-white font-bold text-slate-700"
                       />
                    </div>
@@ -217,7 +217,7 @@ export function PromoteUserModal({
                    <Input 
                      type="number"
                      value={formData.max_daily_appointments}
-                     onChange={(e) => setFormData(p => ({ ...p, max_daily_appointments: e.target.value }))}
+                     onChange={(e) => setFormData((p: any) => ({ ...p, max_daily_appointments: e.target.value }))}
                      className="h-11 rounded-2xl border-slate-200 bg-white font-bold text-slate-700"
                    />
                 </div>

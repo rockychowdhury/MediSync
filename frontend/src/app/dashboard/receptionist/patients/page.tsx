@@ -9,6 +9,8 @@ import { toast } from "sonner";
 
 import { PatientTable } from "./components/PatientTable";
 import { PatientDetailDrawer } from "@/components/dashboard/receptionist/modals/PatientDetailDrawer";
+import { PatientFormDrawer } from "@/components/dashboard/receptionist/modals/PatientFormDrawer";
+import { BookAppointmentModal } from "@/components/dashboard/receptionist/modals/BookAppointmentModal";
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<any[]>([]);
@@ -18,15 +20,18 @@ export default function PatientsPage() {
   
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Drawer states
+  // Drawer/modal states
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isPatientFormOpen, setIsPatientFormOpen] = useState(false);
+  const [editPatientId, setEditPatientId] = useState<string | null>(null);
+  const [bookForPatientId, setBookForPatientId] = useState<string | null>(null);
 
   const fetchPatients = useCallback(async () => {
     setLoading(true);
     try {
       const params: any = {
-        page_size: 1000,
+        limit: 500,
         is_active: activeOnly ? true : undefined
       };
       if (debouncedSearch.length >= 2) {
@@ -46,7 +51,6 @@ export default function PatientsPage() {
   }, [debouncedSearch, activeOnly]);
 
   useEffect(() => {
-    // Only fetch if search is empty or has at least 2 chars
     if (debouncedSearch.length === 0 || debouncedSearch.length >= 2) {
       fetchPatients();
     }
@@ -58,7 +62,12 @@ export default function PatientsPage() {
   };
 
   const handleBookAppointment = (id: string) => {
-    toast.info(`Book appointment modal for patient ${id} not yet implemented`);
+    setBookForPatientId(id);
+  };
+
+  const handleCreateNew = () => {
+    setEditPatientId(null);
+    setIsPatientFormOpen(true);
   };
 
   return (
@@ -104,7 +113,7 @@ export default function PatientsPage() {
 
             <button 
               className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors"
-              onClick={() => toast.info("Create patient modal not yet implemented")}
+              onClick={handleCreateNew}
             >
               <Plus className="w-4 h-4" />
               <span>New Patient</span>
@@ -112,7 +121,6 @@ export default function PatientsPage() {
           </div>
         </div>
 
-        {/* Info message for short search */}
         {searchQuery.length > 0 && searchQuery.length < 2 && (
           <div className="text-sm text-slate-500 ml-2">Type at least 2 characters to search...</div>
         )}
@@ -126,6 +134,7 @@ export default function PatientsPage() {
         />
       </div>
 
+      {/* Patient Detail Drawer */}
       <PatientDetailDrawer 
         isOpen={isDrawerOpen}
         onClose={() => {
@@ -133,7 +142,29 @@ export default function PatientsPage() {
           setSelectedPatientId(null);
         }}
         patientId={selectedPatientId}
-        onBookAppointment={handleBookAppointment}
+        onBookAppointment={(pid) => {
+          setIsDrawerOpen(false);
+          handleBookAppointment(pid);
+        }}
+      />
+
+      {/* Patient Create/Edit Drawer */}
+      <PatientFormDrawer
+        patientId={editPatientId}
+        isOpen={isPatientFormOpen}
+        onClose={() => setIsPatientFormOpen(false)}
+        onSuccess={() => {
+          setIsPatientFormOpen(false);
+          fetchPatients();
+        }}
+      />
+
+      {/* Book Appointment Modal (with pre-filled patient) */}
+      <BookAppointmentModal
+        isOpen={!!bookForPatientId}
+        onClose={() => setBookForPatientId(null)}
+        onSuccess={() => setBookForPatientId(null)}
+        prefillPatientId={bookForPatientId || undefined}
       />
     </div>
   );

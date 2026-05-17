@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { LoginFormData, RegisterFormData, AuthResponse } from "../validations/auth";
+import type { LoginFormData } from "../validations/auth";
 
 export const authApi = {
   login: async (data: LoginFormData) => {
@@ -8,7 +8,7 @@ export const authApi = {
     formData.append("username", data.email);
     formData.append("password", data.password);
 
-    return apiClient.post<AuthResponse>("/auth/login", formData, {
+    return apiClient.post("/auth/login", formData, {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
   },

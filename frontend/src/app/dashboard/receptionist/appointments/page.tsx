@@ -12,6 +12,9 @@ import { Plus } from "lucide-react";
 import { AppointmentsFilterBar, AppointmentFilters } from "./components/AppointmentsFilterBar";
 import { AppointmentListView } from "./components/AppointmentListView";
 import { AppointmentCalendar } from "./components/AppointmentCalendar";
+import { BookAppointmentModal } from "@/components/dashboard/receptionist/modals/BookAppointmentModal";
+import { CancelAppointmentDialog } from "@/components/dashboard/receptionist/modals/CancelAppointmentDialog";
+import { AppointmentDetailDrawer } from "@/components/dashboard/receptionist/modals/AppointmentDetailDrawer";
 import type { Appointment } from "@/types/appointment";
 
 export default function AppointmentsPage() {
@@ -30,7 +33,12 @@ export default function AppointmentsPage() {
     search: "",
   });
 
-  // Load dropdown data once
+  // Modal / drawer state
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [cancelDialogId, setCancelDialogId] = useState<string | null>(null);
+  const [detailDrawerId, setDetailDrawerId] = useState<string | null>(null);
+  const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
@@ -51,9 +59,9 @@ export default function AppointmentsPage() {
     setLoading(true);
     try {
       const params: any = {
-        date_from: filters.date_from,
-        date_to: filters.date_to,
-        page_size: 1000,
+        start_date: filters.date_from,
+        end_date: filters.date_to,
+        limit: 500,
       };
       if (filters.provider_id) params.provider_id = filters.provider_id;
       if (filters.service_id) params.service_id = filters.service_id;
@@ -61,9 +69,7 @@ export default function AppointmentsPage() {
       if (filters.search) params.search = filters.search;
 
       const res = await appointmentsApi.getAppointments(params);
-      if (res.success) {
-        setAppointments(res.data);
-      }
+      if (res.success) setAppointments(res.data);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load appointments");
@@ -72,34 +78,23 @@ export default function AppointmentsPage() {
     }
   }, [filters]);
 
+  useEffect(() => { fetchAppointments(); }, [fetchAppointments]);
+
+  // Listen for appointment_booked events from FloatingBookButton
   useEffect(() => {
-    fetchAppointments();
+    const handler = () => fetchAppointments();
+    window.addEventListener("appointment_booked", handler);
+    return () => window.removeEventListener("appointment_booked", handler);
   }, [fetchAppointments]);
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
       const res = await appointmentsApi.updateStatus(id, newStatus);
       if (res.success) {
-        toast.success(`Appointment status updated to ${newStatus}`);
+        toast.success(`Status updated to ${newStatus.replace("_", " ")}`);
         fetchAppointments();
       }
-    } catch (e) {
-      toast.error("Failed to update status");
-    }
-  };
-
-  const handleCancel = async (id: string) => {
-    const reason = window.prompt("Reason for cancellation?");
-    if (!reason) return;
-    try {
-      const res = await appointmentsApi.updateStatus(id, "cancelled", reason);
-      if (res.success) {
-        toast.success("Appointment cancelled");
-        fetchAppointments();
-      }
-    } catch (e) {
-      toast.error("Failed to cancel appointment");
-    }
+    } catch { toast.error("Failed to update status"); }
   };
 
   return (
@@ -112,7 +107,7 @@ export default function AppointmentsPage() {
           actionContent={
             <button 
               className="flex items-center space-x-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-500/20 hover:bg-blue-700 transition-colors"
-              onClick={() => toast.info("Book appointment modal not yet implemented")}
+              onClick={() => setIsBookModalOpen(true)}
             >
               <Plus className="w-4 h-4" />
               <span>Book Appointment</span>
@@ -136,18 +131,44 @@ export default function AppointmentsPage() {
             appointments={appointments}
             isLoading={loading}
             onStatusChange={handleStatusChange}
-            onCancel={handleCancel}
-            onReschedule={() => toast.info("Reschedule flow not yet implemented")}
-            onViewDetails={() => toast.info("Detail drawer not yet implemented")}
+            onCancel={(id) => setCancelDialogId(id)}
+            onReschedule={(id) => setRescheduleId(id)}
+            onViewDetails={(id) => setDetailDrawerId(id)}
           />
         ) : (
           <AppointmentCalendar 
             appointments={appointments}
             isLoading={loading}
-            onViewDetails={() => toast.info("Detail drawer not yet implemented")}
+            onViewDetails={(id) => setDetailDrawerId(id)}
           />
         )}
       </div>
+
+      {/* Book / Reschedule Modal */}
+      <BookAppointmentModal
+        isOpen={isBookModalOpen || !!rescheduleId}
+        onClose={() => { setIsBookModalOpen(false); setRescheduleId(null); }}
+        onSuccess={() => { setIsBookModalOpen(false); setRescheduleId(null); fetchAppointments(); }}
+        rescheduleAppointmentId={rescheduleId || undefined}
+      />
+
+      {/* Cancel Dialog */}
+      <CancelAppointmentDialog
+        appointmentId={cancelDialogId}
+        isOpen={!!cancelDialogId}
+        onClose={() => setCancelDialogId(null)}
+        onSuccess={() => { setCancelDialogId(null); fetchAppointments(); }}
+      />
+
+      {/* Detail Drawer */}
+      <AppointmentDetailDrawer
+        appointmentId={detailDrawerId}
+        isOpen={!!detailDrawerId}
+        onClose={() => setDetailDrawerId(null)}
+        onStatusChange={(id, status) => { setDetailDrawerId(null); handleStatusChange(id, status); }}
+        onCancel={(id) => { setDetailDrawerId(null); setCancelDialogId(id); }}
+        onReschedule={(id) => { setDetailDrawerId(null); setRescheduleId(id); }}
+      />
     </div>
   );
 }

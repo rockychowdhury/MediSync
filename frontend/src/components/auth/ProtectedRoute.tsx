@@ -18,7 +18,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     if (!isLoading) {
       if (!isAuthenticated) {
         router.replace("/login");
-      } else if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+      } else if (allowedRoles && user && user.role && !allowedRoles.includes(user.role)) {
         // Fallback to their specific dashboard if unauthorized
         if (user.role === "admin") router.replace("/dashboard/admin");
         else if (user.role === "provider") router.replace("/dashboard/provider");
@@ -35,7 +35,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     );
   }
 
-  if (!isAuthenticated || (allowedRoles && user && !allowedRoles.includes(user.role))) {
+  if (!isAuthenticated || (allowedRoles && user && user.role && !allowedRoles.includes(user.role))) {
     return null;
   }
 

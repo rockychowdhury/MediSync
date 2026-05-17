@@ -11,6 +11,9 @@ import type { QueueEntry } from "@/types/queue";
 import { WaitTimeEstimatesStrip } from "./components/WaitTimeEstimatesStrip";
 import { WaitlistTable } from "./components/WaitlistTable";
 import { AssignWaitlistModal } from "@/components/dashboard/receptionist/modals/AssignWaitlistModal";
+import { AddToWaitlistModal } from "@/components/dashboard/receptionist/modals/AddToWaitlistModal";
+import { AppointmentDetailDrawer } from "@/components/dashboard/receptionist/modals/AppointmentDetailDrawer";
+import { CancelAppointmentDialog } from "@/components/dashboard/receptionist/modals/CancelAppointmentDialog";
 
 export default function WaitlistPage() {
   const [entries, setEntries] = useState<QueueEntry[]>([]);
@@ -19,16 +22,17 @@ export default function WaitlistPage() {
   const [loading, setLoading] = useState(true);
   const [loadingEstimates, setLoadingEstimates] = useState(true);
   
-  // Filters
   const [filters, setFilters] = useState({
     service_id: "",
     priority: "all",
     status: "waiting"
   });
 
-  // Modal state
+  // Modal/drawer state
   const [selectedEntry, setSelectedEntry] = useState<QueueEntry | null>(null);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [detailAppointmentId, setDetailAppointmentId] = useState<string | null>(null);
 
   const fetchWaitlist = useCallback(async () => {
     setLoading(true);
@@ -36,7 +40,7 @@ export default function WaitlistPage() {
       const params: any = { 
         status: filters.status, 
         sort: "priority_desc,queue_position_asc",
-        page_size: 1000 
+        limit: 500 
       };
       if (filters.service_id) params.service_id = filters.service_id;
       if (filters.priority !== "all") params.priority = filters.priority;
@@ -55,15 +59,35 @@ export default function WaitlistPage() {
   const fetchEstimates = useCallback(async () => {
     setLoadingEstimates(true);
     try {
-      // In a real app we'd fetch this from a summary endpoint or per-service
-      // Since we don't know if the estimation endpoint accepts a list, we'll mock the aggregated view
-      // based on the services that have active waiting entries.
-      const mockEstimates = [
-        { service_id: "s1", service_name: "General Consultation", estimated_minutes: 15, queue_count: 3 },
-        { service_id: "s2", service_name: "Dental Checkup", estimated_minutes: 45, queue_count: 8 },
-        { service_id: "s3", service_name: "Physiotherapy", estimated_minutes: 120, queue_count: 12 },
-      ];
-      setEstimates(mockEstimates);
+      const res = await waitlistApi.getStats();
+      if (res.success && res.data) {
+        // Transform stats data into per-service estimates
+        // The stats endpoint returns daily KPIs — we'll derive estimates from waiting entries
+        const serviceMap = new Map<string, { service_name: string; count: number; totalWait: number }>();
+        
+        // Group current waiting entries by service to compute estimates
+        const waitRes = await waitlistApi.getWaitlist({ status: "waiting", limit: 500 });
+        if (waitRes.success) {
+          for (const entry of waitRes.data) {
+            const key = entry.service_id || "unknown";
+            if (!serviceMap.has(key)) {
+              serviceMap.set(key, { service_name: entry.service_name, count: 0, totalWait: 0 });
+            }
+            const svc = serviceMap.get(key)!;
+            svc.count++;
+            svc.totalWait += entry.estimated_wait_minutes || 15; // default 15 min if not set
+          }
+        }
+
+        const estimatesList = Array.from(serviceMap.entries()).map(([id, data]) => ({
+          service_id: id,
+          service_name: data.service_name,
+          estimated_minutes: Math.round(data.totalWait / Math.max(1, data.count)),
+          queue_count: data.count,
+        }));
+
+        setEstimates(estimatesList);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -75,7 +99,6 @@ export default function WaitlistPage() {
     fetchWaitlist();
     fetchEstimates();
     
-    // Also fetch services for filter
     servicesApi.getServices().then(res => {
       if (res.success) setServices(res.data);
     });
@@ -88,6 +111,7 @@ export default function WaitlistPage() {
       if (res.success) {
         toast.success("Removed from waitlist");
         fetchWaitlist();
+        fetchEstimates();
       }
     } catch (e) {
       toast.error("Failed to cancel entry");
@@ -97,6 +121,10 @@ export default function WaitlistPage() {
   const handleAssignClick = (entry: QueueEntry) => {
     setSelectedEntry(entry);
     setIsAssignModalOpen(true);
+  };
+
+  const handleViewAppointment = (appointmentId: string) => {
+    setDetailAppointmentId(appointmentId);
   };
 
   return (
@@ -109,7 +137,7 @@ export default function WaitlistPage() {
           actionContent={
             <button 
               className="flex items-center space-x-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-slate-800 transition-colors"
-              onClick={() => toast.info("Add to waitlist modal not yet implemented")}
+              onClick={() => setIsAddModalOpen(true)}
             >
               <Plus className="w-4 h-4" />
               <span>Add to Waitlist</span>
@@ -160,18 +188,41 @@ export default function WaitlistPage() {
           isLoading={loading}
           onAssign={handleAssignClick}
           onCancel={handleCancelEntry}
-          onViewAppointment={(id) => toast.info("Detail drawer not yet implemented")}
+          onViewAppointment={handleViewAppointment}
         />
       </div>
 
+      {/* Add to Waitlist Modal */}
+      <AddToWaitlistModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          setIsAddModalOpen(false);
+          fetchWaitlist();
+          fetchEstimates();
+        }}
+      />
+
+      {/* Assign Waitlist Modal */}
       <AssignWaitlistModal 
         isOpen={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
         entry={selectedEntry}
         onSuccess={() => {
+          setIsAssignModalOpen(false);
           fetchWaitlist();
           fetchEstimates();
         }}
+      />
+
+      {/* Appointment Detail Drawer (for viewing assigned appointments) */}
+      <AppointmentDetailDrawer
+        appointmentId={detailAppointmentId}
+        isOpen={!!detailAppointmentId}
+        onClose={() => setDetailAppointmentId(null)}
+        onStatusChange={() => setDetailAppointmentId(null)}
+        onCancel={() => setDetailAppointmentId(null)}
+        onReschedule={() => setDetailAppointmentId(null)}
       />
     </div>
   );

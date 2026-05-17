@@ -56,6 +56,12 @@ export default function PatientsPage() {
     }
   }, [fetchPatients, debouncedSearch]);
 
+  useEffect(() => {
+    const handler = () => fetchPatients();
+    window.addEventListener("patient_created", handler);
+    return () => window.removeEventListener("patient_created", handler);
+  }, [fetchPatients]);
+
   const handleViewDetails = (id: string) => {
     setSelectedPatientId(id);
     setIsDrawerOpen(true);

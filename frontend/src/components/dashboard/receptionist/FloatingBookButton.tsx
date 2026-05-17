@@ -30,6 +30,7 @@ export function FloatingBookButton() {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         onSuccess={() => {
+          setIsOpen(false);
           // If we are on the queue or appointments page, we should trigger a refresh
           // Since it's a global FAB, the easiest way without complex state is 
           // a soft refresh or using SWR/React Query invalidation.

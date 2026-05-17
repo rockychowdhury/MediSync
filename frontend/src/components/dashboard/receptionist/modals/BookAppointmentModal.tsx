@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { X, Calendar, Clock, User, Stethoscope, ChevronRight, CheckCircle2, Loader2, Shield, Search, Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { PatientSearchInput } from "@/components/dashboard/receptionist/PatientSearchInput";
-import { PatientFormDrawer } from "@/components/dashboard/receptionist/modals/PatientFormDrawer";
 import { servicesApi } from "@/lib/api/services";
 import { providersApi } from "@/lib/api/providers";
 import { appointmentsApi } from "@/lib/api/appointments";
+import { patientsApi } from "@/lib/api/patients";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -41,12 +41,60 @@ export function BookAppointmentModal({
   const [provider, setProvider] = useState<any>(null);
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [timeSlot, setTimeSlot] = useState<SlotData | null>(null);
-  const [isPatientFormOpen, setIsPatientFormOpen] = useState(false);
+
+  // Inline Patient Creation states
+  const [showNewPatientForm, setShowNewPatientForm] = useState(false);
+  const [newPatientData, setNewPatientData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    date_of_birth: "",
+    gender: "",
+    notification_opt_out: false
+  });
+  const [registeringPatient, setRegisteringPatient] = useState(false);
+
+  const handleRegisterPatientInline = async () => {
+    if (!newPatientData.name.trim()) {
+      toast.error("Patient name is required");
+      return;
+    }
+    setRegisteringPatient(true);
+    try {
+      const res = await patientsApi.createPatient(newPatientData);
+      if (res.success) {
+        toast.success("Patient registered and selected successfully");
+        setPatient(res.data);
+        setShowNewPatientForm(false);
+        setNewPatientData({
+          name: "", phone: "", email: "", date_of_birth: "", gender: "", notification_opt_out: false
+        });
+        window.dispatchEvent(new CustomEvent("patient_created"));
+      } else {
+        toast.error("Failed to register patient");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to register patient");
+    } finally {
+      setRegisteringPatient(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
       setStep(1);
-      if (!prefillPatientId) setPatient(null);
+      setShowNewPatientForm(false);
+      setNewPatientData({
+        name: "", phone: "", email: "", date_of_birth: "", gender: "", notification_opt_out: false
+      });
+      if (prefillPatientId) {
+        patientsApi.getPatient(prefillPatientId).then(r => {
+          if (r.success) setPatient(r.data);
+        });
+      } else {
+        setPatient(null);
+      }
       if (!prefillServiceId) setService(null);
       setPriority("standard"); setAutoAssign(true); setProvider(null);
       setTimeSlot(null); setDate(format(new Date(), "yyyy-MM-dd")); setSlots([]);
@@ -186,15 +234,113 @@ export function BookAppointmentModal({
             <div className="space-y-6 animate-in slide-in-from-right-8 duration-300 min-h-[280px] flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Patient Directory</h3>
-                  {patient && (
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    {showNewPatientForm ? "Create New Patient Profile" : "Patient Directory"}
+                  </h3>
+                  {patient && !showNewPatientForm && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-200/50">
                       Selected
                     </span>
                   )}
                 </div>
-                {patient ? (
-                  <div className="p-4 border border-blue-100 bg-blue-50/30 rounded-2xl flex items-center justify-between transition-all duration-300 hover:bg-blue-50/50">
+
+                {showNewPatientForm ? (
+                  <div className="space-y-4 p-5 bg-slate-50/50 rounded-2xl border border-slate-100 animate-in fade-in duration-300">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Full Name *</label>
+                        <input 
+                          type="text"
+                          required
+                          value={newPatientData.name}
+                          onChange={e => setNewPatientData({ ...newPatientData, name: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-normal"
+                          placeholder="e.g. John Doe"
+                        />
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Phone Number</label>
+                        <input 
+                          type="tel"
+                          value={newPatientData.phone}
+                          onChange={e => setNewPatientData({ ...newPatientData, phone: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-normal"
+                          placeholder="e.g. (555) 123-4567"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Address</label>
+                        <input 
+                          type="email"
+                          value={newPatientData.email}
+                          onChange={e => setNewPatientData({ ...newPatientData, email: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700 placeholder:text-slate-400 placeholder:font-normal"
+                          placeholder="e.g. john@example.com"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Date of Birth</label>
+                        <input 
+                          type="date"
+                          value={newPatientData.date_of_birth}
+                          onChange={e => setNewPatientData({ ...newPatientData, date_of_birth: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Gender</label>
+                        <select 
+                          value={newPatientData.gender}
+                          onChange={e => setNewPatientData({ ...newPatientData, gender: e.target.value })}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700"
+                        >
+                          <option value="">Select...</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                          <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-4 sm:col-span-2 bg-white p-3 rounded-xl border border-slate-100/60">
+                        <input 
+                          type="checkbox"
+                          id="inline_opt_out"
+                          checked={newPatientData.notification_opt_out}
+                          onChange={e => setNewPatientData({ ...newPatientData, notification_opt_out: e.target.checked })}
+                          className="text-blue-600 focus:ring-blue-500 rounded border-slate-300 w-4 h-4 cursor-pointer"
+                        />
+                        <label htmlFor="inline_opt_out" className="text-xs font-bold text-slate-500 cursor-pointer select-none">
+                          Opt out of automated clinical notifications
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowNewPatientForm(false)}
+                        className="px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="button"
+                        disabled={!newPatientData.name.trim() || registeringPatient}
+                        onClick={handleRegisterPatientInline}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-98"
+                      >
+                        {registeringPatient && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+                        Save & Select
+                      </button>
+                    </div>
+                  </div>
+                ) : patient ? (
+                  <div className="p-4 border border border-blue-100 bg-blue-50/30 rounded-2xl flex items-center justify-between transition-all duration-300 hover:bg-blue-50/50">
                     <div className="flex items-center gap-4">
                       <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-50">
                         <User className="w-5 h-5" />
@@ -212,8 +358,8 @@ export function BookAppointmentModal({
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    <PatientSearchInput onSelect={setPatient} autoFocus onCreateNew={() => setIsPatientFormOpen(true)} />
+                  <div className="space-y-6 animate-in fade-in duration-300">
+                    <PatientSearchInput onSelect={setPatient} autoFocus onCreateNew={() => setShowNewPatientForm(true)} />
                     
                     {/* Visual Enhancement Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
@@ -227,7 +373,7 @@ export function BookAppointmentModal({
                         </div>
                       </div>
                       <button 
-                        onClick={() => setIsPatientFormOpen(true)}
+                        onClick={() => setShowNewPatientForm(true)}
                         className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex gap-3.5 text-left hover:bg-blue-50/30 hover:border-blue-200 transition-all group"
                       >
                         <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all">
@@ -476,7 +622,6 @@ export function BookAppointmentModal({
           )}
         </div>
       </div>
-      <PatientFormDrawer patientId={null} isOpen={isPatientFormOpen} onClose={() => setIsPatientFormOpen(false)} onSuccess={() => { setIsPatientFormOpen(false); toast.success("Patient created — search and select them above."); }} />
     </>
   );
 }

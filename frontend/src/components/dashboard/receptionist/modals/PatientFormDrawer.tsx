@@ -9,7 +9,7 @@ interface PatientFormDrawerProps {
   patientId: string | null; // null = create new
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (patient?: any) => void;
 }
 
 export function PatientFormDrawer({
@@ -67,7 +67,8 @@ export function PatientFormDrawer({
       
       if (res.success) {
         toast.success(`Patient ${patientId ? 'updated' : 'created'} successfully`);
-        onSuccess();
+        onSuccess(res.data);
+        window.dispatchEvent(new CustomEvent("patient_created"));
         onClose();
       }
     } catch (error) {

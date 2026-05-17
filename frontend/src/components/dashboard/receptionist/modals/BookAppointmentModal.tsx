@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Calendar, Clock, User, Stethoscope, ChevronRight, CheckCircle2, Loader2, Shield, Search, Plus } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { format, parseISO } from "date-fns";
 import { PatientSearchInput } from "@/components/dashboard/receptionist/PatientSearchInput";
 import { servicesApi } from "@/lib/api/services";
@@ -180,19 +181,8 @@ export function BookAppointmentModal({
   };
 
   return (
-    <div className={cn("fixed inset-0 z-[100] flex items-center justify-center transition-all duration-300", isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none")}>
-      <div 
-        className="fixed inset-0 bg-slate-950/45 backdrop-blur-[1.5px] transition-opacity duration-300" 
-        onClick={onClose} 
-      />
-      <div 
-        className={cn(
-          "relative transform-gpu w-full max-w-2xl h-[620px] bg-white rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] z-10 flex flex-col overflow-hidden transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) will-change-[transform,opacity] border border-slate-100/50",
-          isOpen ? "scale-100 opacity-100 translate-y-0" : "scale-97 opacity-0 translate-y-4"
-        )}
-      >
-        {isOpen && (
-          <>
+    <Dialog open={isOpen} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-2xl h-[620px] p-0 overflow-hidden bg-white border border-slate-100/50 rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] z-[100] flex flex-col gap-0 [&>button]:hidden">
         {/* Header */}
         <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white relative z-10 shrink-0">
           <div>
@@ -631,9 +621,7 @@ export function BookAppointmentModal({
             </button>
           )}
         </div>
-          </>
-        )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

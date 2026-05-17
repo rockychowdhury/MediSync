@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Calendar, Clock, User, Stethoscope, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
+import { X, Calendar, Clock, User, Stethoscope, ChevronRight, CheckCircle2, Loader2, Shield, Search, Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { PatientSearchInput } from "@/components/dashboard/receptionist/PatientSearchInput";
 import { PatientFormDrawer } from "@/components/dashboard/receptionist/modals/PatientFormDrawer";
@@ -132,73 +132,166 @@ export function BookAppointmentModal({
   return (
     <>
       <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 transition-opacity" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl bg-white rounded-2xl shadow-2xl z-50 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-50 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100/50">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white relative z-10">
+        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white relative z-10">
           <div>
-            <h2 className="text-xl font-black text-slate-900">
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">
               {rescheduleAppointmentId ? "Reschedule Appointment" : "Book New Appointment"}
             </h2>
             {rescheduleAppointmentId && (
-              <span className="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase tracking-wider">Rescheduling Flow</span>
+              <span className="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase tracking-wider">Rescheduling Itinerary</span>
             )}
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition-all hover:text-slate-600"><X className="w-5 h-5" /></button>
         </div>
+        
         {/* Stepper */}
-        <div className="flex border-b border-slate-100 bg-slate-50 px-6 py-3">
-          {[1,2,3,4].map(s => (
-            <div key={s} className="flex-1 flex items-center">
-              <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors", step === s ? "bg-blue-600 text-white" : step > s ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500")}>
-                {step > s ? <CheckCircle2 className="w-4 h-4" /> : s}
+        <div className="px-8 py-5 bg-slate-50/50 border-b border-slate-100">
+          <div className="flex items-center justify-between max-w-md mx-auto relative">
+            {/* Connecting Line Background */}
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200" />
+            {/* Connecting Line Active */}
+            <div 
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-blue-600 transition-all duration-500" 
+              style={{ width: `${((step - 1) / 3) * 100}%` }}
+            />
+            
+            {[1,2,3,4].map(s => (
+              <div key={s} className="relative z-10 flex flex-col items-center">
+                <div className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all duration-300 shadow-sm border-2",
+                  step === s ? "bg-blue-600 border-blue-600 text-white ring-4 ring-blue-100 scale-105" : 
+                  step > s ? "bg-emerald-500 border-emerald-500 text-white" : 
+                  "bg-white border-slate-200 text-slate-400"
+                )}>
+                  {step > s ? <CheckCircle2 className="w-4 h-4 stroke-[3]" /> : s}
+                </div>
+                <span className={cn(
+                  "absolute -bottom-6 text-[9px] font-black uppercase tracking-widest whitespace-nowrap transition-colors duration-300 hidden sm:block",
+                  step >= s ? "text-slate-800" : "text-slate-400"
+                )}>
+                  {s === 1 ? "Patient" : s === 2 ? "Service" : s === 3 ? "Time" : "Confirm"}
+                </span>
               </div>
-              <div className="ml-2 text-xs font-bold uppercase tracking-wider hidden sm:block mr-2" style={{ color: step >= s ? '#0f172a' : '#94a3b8' }}>
-                {s === 1 ? "Patient" : s === 2 ? "Service" : s === 3 ? "Time" : "Confirm"}
-              </div>
-              {s < 4 && <div className="flex-1 h-px bg-slate-200 mx-2" />}
-            </div>
-          ))}
+            ))}
+          </div>
+          {/* Extra spacer for absolute bottom labels */}
+          <div className="h-4 hidden sm:block" />
         </div>
+
         {/* Content */}
-        <div className="p-6 overflow-y-auto hidden-scrollbar flex-1 bg-white">
+        <div className="p-8 overflow-y-auto hidden-scrollbar flex-1 bg-white">
           {step === 1 && (
-            <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-              <h3 className="text-sm font-bold text-slate-700">Find or Create Patient</h3>
-              {patient ? (
-                <div className="p-4 border border-blue-200 bg-blue-50 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm"><User className="w-5 h-5" /></div>
-                    <div>
-                      <div className="font-bold text-slate-900">{patient.name}</div>
-                      <div className="text-xs text-slate-500">{patient.phone || patient.email || "No contact info"}</div>
+            <div className="space-y-6 animate-in slide-in-from-right-8 duration-300 min-h-[280px] flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Patient Directory</h3>
+                  {patient && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-200/50">
+                      Selected
+                    </span>
+                  )}
+                </div>
+                {patient ? (
+                  <div className="p-4 border border-blue-100 bg-blue-50/30 rounded-2xl flex items-center justify-between transition-all duration-300 hover:bg-blue-50/50">
+                    <div className="flex items-center gap-4">
+                      <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-50">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="font-black text-slate-900 tracking-tight text-sm">{patient.name}</div>
+                        <div className="text-[11px] text-slate-500 font-semibold mt-0.5">{patient.phone || patient.email || "No contact details provided"}</div>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setPatient(null)} 
+                      className="px-3 py-1.5 text-xs font-black text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    >
+                      Change Patient
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <PatientSearchInput onSelect={setPatient} autoFocus onCreateNew={() => setIsPatientFormOpen(true)} />
+                    
+                    {/* Visual Enhancement Section */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+                      <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex gap-3.5 transition-all hover:bg-slate-50">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <Search className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 tracking-tight mb-0.5">Quick Search</h4>
+                          <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">Instantly match existing records via patient name, email, or telephone.</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setIsPatientFormOpen(true)}
+                        className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex gap-3.5 text-left hover:bg-blue-50/30 hover:border-blue-200 transition-all group"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                          <Plus className="w-4.5 h-4.5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 tracking-tight mb-0.5 group-hover:text-blue-600 transition-colors">New Registration</h4>
+                          <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">Enroll a first-time clinical profile immediately in the workspace queue.</p>
+                        </div>
+                      </button>
                     </div>
                   </div>
-                  <button onClick={() => setPatient(null)} className="text-xs font-bold text-blue-600 hover:underline">Change</button>
-                </div>
-              ) : (
-                <PatientSearchInput onSelect={setPatient} autoFocus onCreateNew={() => setIsPatientFormOpen(true)} />
-              )}
+                )}
+              </div>
             </div>
           )}
           {step === 2 && (
-            <div className="space-y-8 animate-in slide-in-from-right-8 duration-300">
+            <div className="space-y-8 animate-in slide-in-from-right-8 duration-300 min-h-[280px]">
               <div>
-                <h3 className="text-sm font-bold text-slate-700 mb-3">Select Service</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Select Clinical Service</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {services.map(s => (
-                    <label key={s.id} className={cn("flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all", service?.id === s.id ? "border-blue-600 bg-blue-50/50 shadow-sm" : "border-slate-200 hover:border-blue-300")}>
-                      <input type="radio" name="service" className="w-4 h-4 text-blue-600" checked={service?.id === s.id} onChange={() => setService(s)} />
-                      <div><div className="font-bold text-slate-900 text-sm">{s.name}</div><div className="text-xs text-slate-500">{s.duration_minutes} min</div></div>
+                    <label 
+                      key={s.id} 
+                      className={cn(
+                        "flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all duration-300 relative overflow-hidden group select-none",
+                        service?.id === s.id ? "border-blue-600 bg-blue-50/30 shadow-md shadow-blue-500/5 ring-1 ring-blue-600/50" : "border-slate-100 bg-white hover:border-blue-300 hover:shadow-sm"
+                      )}
+                    >
+                      <input 
+                        type="radio" 
+                        name="service" 
+                        className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500 transition-all" 
+                        checked={service?.id === s.id}
+                        onChange={() => setService(s)}
+                      />
+                      <div className="flex-1">
+                        <div className="font-black text-slate-900 tracking-tight text-sm group-hover:text-blue-600 transition-colors">{s.name}</div>
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 flex items-center gap-1.5">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          {s.duration_minutes} Minutes
+                        </div>
+                      </div>
                     </label>
                   ))}
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-700 mb-3">Priority Level</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Priority Assessment</h3>
                 <div className="flex gap-3">
                   {(["standard", "urgent", "emergency"] as const).map(p => (
-                    <label key={p} className={cn("flex-1 text-center p-3 rounded-xl border cursor-pointer transition-all", priority === p ? (p === "emergency" ? "border-red-600 bg-red-50 text-red-700 font-bold" : p === "urgent" ? "border-amber-500 bg-amber-50 text-amber-700 font-bold" : "border-blue-600 bg-blue-50 text-blue-700 font-bold") : "border-slate-200 text-slate-600 hover:border-slate-300")}>
-                      <input type="radio" className="sr-only" checked={priority === p} onChange={() => setPriority(p)} /><span className="capitalize text-sm">{p}</span>
+                    <label 
+                      key={p} 
+                      className={cn(
+                        "flex-1 text-center p-3.5 rounded-2xl border cursor-pointer transition-all duration-300 uppercase tracking-widest text-[10px] font-black select-none",
+                        priority === p ? (
+                          p === "emergency" ? "border-red-500 bg-red-50/50 text-red-700 ring-1 ring-red-500" :
+                          p === "urgent" ? "border-amber-500 bg-amber-50/50 text-amber-700 ring-1 ring-amber-500" :
+                          "border-blue-600 bg-blue-50/30 text-blue-700 ring-1 ring-blue-600"
+                        ) : "border-slate-100 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                      )}
+                    >
+                      <input type="radio" className="sr-only" checked={priority === p} onChange={() => setPriority(p)} />
+                      {p}
                     </label>
                   ))}
                 </div>
@@ -206,81 +299,180 @@ export function BookAppointmentModal({
             </div>
           )}
           {step === 3 && (
-            <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-              <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                <div><h4 className="font-bold text-slate-800 text-sm">Provider Assignment</h4><p className="text-xs text-slate-500">Auto-assign or select specifically.</p></div>
-                <label className="flex items-center gap-2 cursor-pointer">
+            <div className="space-y-6 animate-in slide-in-from-right-8 duration-300 min-h-[280px]">
+              <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                <div>
+                  <h4 className="font-black text-slate-900 tracking-tight text-xs uppercase tracking-wider">Clinical Care Assignment</h4>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Let the scheduling algorithm allocate availability or pick a specific provider.</p>
+                </div>
+                <label className="flex items-center gap-3 cursor-pointer select-none">
                   <div className="relative">
-                    <input type="checkbox" className="sr-only" checked={autoAssign} onChange={e => { setAutoAssign(e.target.checked); setProvider(null); setTimeSlot(null); }} />
-                    <div className={`block w-10 h-6 rounded-full transition-colors ${autoAssign ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
-                    <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${autoAssign ? 'transform translate-x-4' : ''}`}></div>
+                    <input 
+                      type="checkbox" 
+                      className="sr-only" 
+                      checked={autoAssign} 
+                      onChange={e => { setAutoAssign(e.target.checked); setProvider(null); setTimeSlot(null); }} 
+                    />
+                    <div className={cn("block w-11 h-6 rounded-full transition-colors duration-300", autoAssign ? 'bg-blue-600' : 'bg-slate-200')}></div>
+                    <div className={cn("absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm", autoAssign ? 'transform translate-x-5' : '')}></div>
                   </div>
-                  <span className="text-xs font-bold text-slate-700">Auto Assign</span>
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-widest">Auto</span>
                 </label>
               </div>
+
               {!autoAssign && (
-                <div>
-                  <h3 className="text-sm font-bold text-slate-700 mb-3">Select Provider</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto">
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Select Provider</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                     {providers.map(p => (
-                      <label key={p.id} className={cn("flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all", provider?.id === p.id ? "border-blue-600 bg-blue-50/50 shadow-sm" : "border-slate-200 hover:border-blue-300")}>
+                      <label 
+                        key={p.id} 
+                        className={cn(
+                          "flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all duration-300 select-none",
+                          provider?.id === p.id ? "border-blue-600 bg-blue-50/30 ring-1 ring-blue-600/50" : "border-slate-100 bg-white hover:border-blue-300"
+                        )}
+                      >
                         <input type="radio" className="sr-only" checked={provider?.id === p.id} onChange={() => { setProvider(p); setTimeSlot(null); }} />
-                        <div className={cn("w-4 h-4 rounded-full border flex items-center justify-center", provider?.id === p.id ? "border-blue-600" : "border-slate-300")}>{provider?.id === p.id && <div className="w-2 h-2 rounded-full bg-blue-600" />}</div>
-                        <div className="font-bold text-slate-900 text-sm">{p.full_name}</div>
+                        <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors", provider?.id === p.id ? "border-blue-600" : "border-slate-300")}>
+                          {provider?.id === p.id && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                        </div>
+                        <div>
+                          <div className="font-black text-slate-900 tracking-tight text-xs">{p.full_name}</div>
+                          <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{p.specialization?.name || "Clinical Practitioner"}</div>
+                        </div>
                       </label>
                     ))}
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Select Date</h3>
-                  <input type="date" value={date} min={format(new Date(), "yyyy-MM-dd")} onChange={e => { setDate(e.target.value); setTimeSlot(null); }} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                <div className="space-y-2">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Select Target Date
+                  </h3>
+                  <input 
+                    type="date" 
+                    value={date} 
+                    min={format(new Date(), "yyyy-MM-dd")} 
+                    onChange={e => { setDate(e.target.value); setTimeSlot(null); }} 
+                    className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
+                  />
                 </div>
-                <div>
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">Available Slots</h3>
+                <div className="space-y-2">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
+                      Available Slots
+                    </span>
+                    {slots.length > 0 && !loadingSlots && (
+                      <span className="text-[9px] bg-slate-100 text-slate-600 font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        {slots.filter(s => s.available).length} Free
+                      </span>
+                    )}
+                  </h3>
                   {loadingSlots ? (
-                    <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-blue-600" /></div>
+                    <div className="flex items-center justify-center py-10 bg-slate-50/50 border border-slate-100 border-dashed rounded-2xl">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                    </div>
                   ) : slots.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                       {slots.map((slot, idx) => (
-                        <button key={idx} disabled={!slot.available} onClick={() => setTimeSlot(slot)}
-                          className={cn("py-2 rounded-lg text-sm font-bold transition-all border text-center", !slot.available ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-60' : timeSlot?.start === slot.start ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400')}
-                          title={slot.reason || undefined}>{fmtSlot(slot.start)}</button>
+                        <button 
+                          key={idx} 
+                          disabled={!slot.available} 
+                          onClick={() => setTimeSlot(slot)}
+                          className={cn(
+                            "py-2.5 rounded-xl text-xs font-black tracking-wider transition-all duration-300 border text-center select-none shadow-sm",
+                            !slot.available 
+                              ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-60 shadow-none' 
+                              : timeSlot?.start === slot.start 
+                                ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/10 scale-102 ring-2 ring-blue-600/30' 
+                                : 'bg-white border-slate-100 text-slate-700 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/10'
+                          )}
+                          title={slot.reason || undefined}
+                        >
+                          {fmtSlot(slot.start)}
+                        </button>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-6 text-sm text-slate-400 bg-slate-50 rounded-xl border border-slate-100 border-dashed">{(!autoAssign && !provider) ? "Select a provider first" : "No slots available"}</div>
+                    <div className="text-center py-10 text-xs font-bold text-slate-400 bg-slate-50/50 border border-slate-100 border-dashed rounded-2xl uppercase tracking-wider">
+                      {(!autoAssign && !provider) ? "Choose Provider First" : "No available times"}
+                    </div>
                   )}
                 </div>
               </div>
             </div>
           )}
           {step === 4 && (
-            <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center">
-                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><Calendar className="w-8 h-8" /></div>
-                <h3 className="text-lg font-black text-slate-900 mb-1">Ready to Confirm</h3>
-                <p className="text-sm text-slate-500">Please review the details below.</p>
+            <div className="space-y-8 animate-in slide-in-from-right-8 duration-300 min-h-[280px] flex flex-col justify-between">
+              <div className="bg-blue-50/30 border border-blue-100 rounded-3xl p-6 text-center">
+                <div className="w-14 h-14 bg-white text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md border border-blue-50">
+                  <Calendar className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <h3 className="text-base font-black text-slate-900 tracking-tight mb-1">Verify Booking Scope</h3>
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">Review the clinical itinerary before initializing the registry transaction.</p>
               </div>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-8 px-4">
-                <div className="flex flex-col gap-1"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Patient</span><span className="text-sm font-bold text-slate-900 flex items-center gap-2"><User className="w-3.5 h-3.5 text-slate-400" /> {patient?.name}</span></div>
-                <div className="flex flex-col gap-1"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Service</span><span className="text-sm font-bold text-slate-900 flex items-center gap-2"><Stethoscope className="w-3.5 h-3.5 text-slate-400" /> {service?.name}</span></div>
-                <div className="flex flex-col gap-1"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Date & Time</span><span className="text-sm font-bold text-slate-900 flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-slate-400" /> {date} at {timeSlot ? fmtSlot(timeSlot.start) : "—"}</span></div>
-                <div className="flex flex-col gap-1"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Provider</span><span className="text-sm font-bold text-slate-900">{autoAssign ? "Auto Assigned" : provider?.full_name}</span></div>
+              <div className="grid grid-cols-2 gap-y-5 gap-x-8 px-4 py-4 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Patient Record</span>
+                  <span className="text-xs font-black text-slate-900 flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-blue-500" /> {patient?.name}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Clinical Entitlement</span>
+                  <span className="text-xs font-black text-slate-900 flex items-center gap-2">
+                    <Stethoscope className="w-3.5 h-3.5 text-emerald-500" /> {service?.name}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Itinerary Target</span>
+                  <span className="text-xs font-black text-slate-900 flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-amber-500" /> {date} at {timeSlot ? fmtSlot(timeSlot.start) : "—"}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Assigned Practitioner</span>
+                  <span className="text-xs font-black text-slate-900 flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 text-indigo-500" /> {autoAssign ? "Automated Dispatch" : provider?.full_name}
+                  </span>
+                </div>
               </div>
             </div>
           )}
         </div>
+        
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white rounded-b-2xl">
-          <button onClick={() => setStep(step - 1)} disabled={step === 1 || loading} className={cn("px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-0")}>Back</button>
+        <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between bg-white rounded-b-3xl">
+          <button 
+            onClick={() => setStep(step - 1)} 
+            disabled={step === 1 || loading} 
+            className={cn(
+              "px-4 py-2.5 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-0"
+            )}
+          >
+            Back
+          </button>
           {step < 4 ? (
-            <button onClick={() => setStep(step + 1)} disabled={(step === 1 && !patient) || (step === 2 && !service) || (step === 3 && (!timeSlot || (!autoAssign && !provider)))}
-              className="flex items-center gap-2 px-6 py-2 bg-slate-900 text-white text-sm font-bold rounded-xl shadow-md disabled:opacity-50 hover:bg-slate-800 transition-colors">Continue <ChevronRight className="w-4 h-4" /></button>
+            <button 
+              onClick={() => setStep(step + 1)} 
+              disabled={(step === 1 && !patient) || (step === 2 && !service) || (step === 3 && (!timeSlot || (!autoAssign && !provider)))}
+              className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-950/10 disabled:opacity-50 disabled:pointer-events-none active:scale-98 transition-all"
+            >
+              Continue <ChevronRight className="w-3.5 h-3.5 stroke-[3]" />
+            </button>
           ) : (
-            <button onClick={handleBook} disabled={loading} className="flex items-center gap-2 px-8 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-500/20 disabled:opacity-50 hover:bg-blue-700 transition-colors">
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}Confirm Booking</button>
+            <button 
+              onClick={handleBook} 
+              disabled={loading} 
+              className="flex items-center gap-2 px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:pointer-events-none active:scale-98 transition-all"
+            >
+              {loading && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+              Confirm Booking
+            </button>
           )}
         </div>
       </div>

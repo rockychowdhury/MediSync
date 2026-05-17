@@ -179,10 +179,15 @@ export function BookAppointmentModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] transition-opacity" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl z-[100] flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100/50">
+      <div 
+        className="fixed inset-0 bg-slate-950/45 backdrop-blur-[1.5px] z-[100] animate-in fade-in duration-250 ease-out will-change-[opacity]" 
+        onClick={onClose} 
+      />
+      <div 
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform-gpu w-full max-w-2xl min-h-[600px] max-h-[600px] bg-white rounded-[28px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] z-[100] flex flex-col overflow-hidden animate-in zoom-in-[97%] duration-300 cubic-bezier(0.16, 1, 0.3, 1) will-change-[transform,opacity] border border-slate-100/50"
+      >
         {/* Header */}
-        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white relative z-10">
+        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white relative z-10 shrink-0">
           <div>
             <h2 className="text-lg font-black text-slate-900 tracking-tight">
               {rescheduleAppointmentId ? "Reschedule Appointment" : "Book New Appointment"}
@@ -195,7 +200,7 @@ export function BookAppointmentModal({
         </div>
         
         {/* Stepper */}
-        <div className="px-8 py-5 bg-slate-50/50 border-b border-slate-100">
+        <div className="px-8 py-5 bg-slate-50/50 border-b border-slate-100 shrink-0">
           <div className="flex items-center justify-between max-w-md mx-auto relative">
             {/* Connecting Line Background */}
             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200" />
@@ -229,9 +234,9 @@ export function BookAppointmentModal({
         </div>
 
         {/* Content */}
-        <div className="p-8 overflow-y-auto hidden-scrollbar flex-1 bg-white">
+        <div className="p-8 overflow-y-auto hidden-scrollbar flex-1 min-h-[380px] max-h-[380px] bg-white">
           {step === 1 && (
-            <div className="space-y-6 animate-in slide-in-from-right-8 duration-300 min-h-[280px] flex flex-col justify-between">
+            <div className="space-y-6 animate-in fade-in duration-200 ease-out will-change-[opacity] min-h-[315px] flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
@@ -391,10 +396,10 @@ export function BookAppointmentModal({
             </div>
           )}
           {step === 2 && (
-            <div className="space-y-8 animate-in slide-in-from-right-8 duration-300 min-h-[280px]">
+            <div className="space-y-6 animate-in fade-in duration-200 ease-out will-change-[opacity] min-h-[315px]">
               <div>
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Select Clinical Service</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                   {services.map(s => (
                     <label 
                       key={s.id} 
@@ -445,7 +450,7 @@ export function BookAppointmentModal({
             </div>
           )}
           {step === 3 && (
-            <div className="space-y-6 animate-in slide-in-from-right-8 duration-300 min-h-[280px]">
+            <div className="space-y-6 animate-in fade-in duration-200 ease-out will-change-[opacity] min-h-[315px]">
               <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-slate-100 rounded-2xl">
                 <div>
                   <h4 className="font-black text-slate-900 tracking-tight text-xs uppercase tracking-wider">Clinical Care Assignment</h4>
@@ -553,7 +558,7 @@ export function BookAppointmentModal({
             </div>
           )}
           {step === 4 && (
-            <div className="space-y-8 animate-in slide-in-from-right-8 duration-300 min-h-[280px] flex flex-col justify-between">
+            <div className="space-y-6 animate-in fade-in duration-200 ease-out will-change-[opacity] min-h-[315px] flex flex-col justify-between">
               <div className="bg-blue-50/30 border border-blue-100 rounded-3xl p-6 text-center">
                 <div className="w-14 h-14 bg-white text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md border border-blue-50">
                   <Calendar className="w-6 h-6 stroke-[2.5]" />
